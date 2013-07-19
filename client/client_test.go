@@ -17,18 +17,30 @@ var sendRequestTests = []struct {
 		Method:  "GET",
 		URI:     "/",
 		Version: "HTTP/1.1",
-		Body:    b("Hello world!"),
+		// no body
 	},
-		"GET / HTTP/1.1\r\n\r\nHello world!",
+		"GET / HTTP/1.1\r\n\r\n",
 	},
 	{Request{
 		Method:  "GET",
 		URI:     "/",
 		Version: "HTTP/1.1",
-		// no body
+		Body:    b("Hello world!"),
 	},
-		"GET / HTTP/1.1\r\n\r\n",
+		"GET / HTTP/1.1\r\n\r\nHello world!",
 	},
+        {Request{
+                Method:  "GET",
+                URI:     "/",
+                Version: "HTTP/1.1",
+                Body:    b("Hello world!"),
+		Headers: []Header{{
+			Key: "Host", Value: "localhost",
+		}},
+        },
+                "GET / HTTP/1.1\r\nHost: localhost\r\n\r\nHello world!",
+        },
+
 }
 
 func TestClientSendRequest(t *testing.T) {
