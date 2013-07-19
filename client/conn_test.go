@@ -2,6 +2,7 @@ package client
 
 import (
 	"bytes"
+	"strings"
 	"testing"
 )
 
@@ -165,6 +166,27 @@ func TestWrite(t *testing.T) {
 		c.Write(t, tt)
 		if actual := b.String(); actual != tt.expected {
 			t.Errorf("TestWrite: expected %q, got %q", tt.expected, actual)
+		}
+	}
+}
+
+var readStatusLineTests = []struct {
+	line string
+	code int
+	msg  string
+}{
+	{"200 OK\r\n", 200, "OK"},
+}
+
+func TestReadStatusLine(t *testing.T) {
+	for _, tt := range readStatusLineTests {
+		c := &Conn{reader: strings.NewReader(tt.line)}
+		code, msg, err := c.ReadStatusLine()
+		if err != nil {
+			t.Fatal(err)
+		}
+		if code != tt.code || msg != tt.msg {
+			t.Errorf("ReadStatusLine: expected \"%d %s\", got \"%d %s\"", tt.code, tt.msg, code, msg)
 		}
 	}
 }

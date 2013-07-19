@@ -1,6 +1,7 @@
 package client
 
 import (
+	"bufio"
 	"fmt"
 	"io"
 )
@@ -39,6 +40,7 @@ func (p *phaseError) Error() string {
 type Conn struct {
 	phase
 	writer io.Writer
+	reader io.Reader
 }
 
 // NewConn returns a new *Conn
@@ -81,4 +83,17 @@ func (c *Conn) WriteBody(r io.Reader) error {
 	_, err := io.Copy(c.writer, r)
 	c.phase = requestline
 	return err
+}
+
+// ReadStatusLine reads the status line.
+func (c *Conn) ReadStatusLine() (int, string, error) {
+	var code int
+	if _, err := fmt.Fscanf(c.reader, "%d ", &code); err != nil {
+		return 0, "", err
+	}
+	s := bufio.NewScanner(c.reader)
+	if !s.Scan() {
+		return 0, "", s.Err()
+	}
+	return code, s.Text(), s.Err()
 }
