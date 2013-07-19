@@ -116,3 +116,12 @@ func (c *Conn) ReadHeader() (string, string, bool, error) {
 	}
 	return strings.TrimSpace(v[0]), strings.TrimSpace(v[1]), false, nil
 }
+
+// ReadBody returns length bytes of body
+// TODO(dfc) temporary function, read readbody will return an io.Reader
+// TODO(dfc) doesn't handle chunked transfer encoding
+func (c *Conn) ReadBody(length int) ([]byte, error) {
+	v := make([]byte, length)
+	_, err := io.ReadFull(c.reader, v)
+	return v, err
+}

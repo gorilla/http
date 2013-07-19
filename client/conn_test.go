@@ -2,6 +2,7 @@ package client
 
 import (
 	"bytes"
+	"io"
 	"strings"
 	"testing"
 )
@@ -191,7 +192,7 @@ func TestReadStatusLine(t *testing.T) {
 	}
 }
 
-var readHeaderTest = []struct {
+var readHeaderTests = []struct {
 	header     string
 	key, value string
 	done       bool
@@ -205,7 +206,7 @@ var readHeaderTest = []struct {
 }
 
 func TestReadHeader(t *testing.T) {
-	for _, tt := range readHeaderTest {
+	for _, tt := range readHeaderTests {
 		c := &Conn{reader: strings.NewReader(tt.header)}
 		key, value, done, err := c.ReadHeader()
 		if err != nil {
@@ -213,6 +214,27 @@ func TestReadHeader(t *testing.T) {
 		}
 		if key != tt.key || value != tt.value || done != tt.done {
 			t.Errorf("ReadHeader: expected %q %q %v, got %q %q %v", tt.key, tt.value, tt.done, key, value, done)
+		}
+	}
+}
+
+var readBodyTests = []struct {
+	body     string
+	length   int
+	expected string
+	err      error
+}{
+	{"hello", len("hello"), "hello", nil},
+	{"hello", len("hello") - 1, "hell", nil},
+	{"hello", len("hello") + 1, "hello\x00", io.ErrUnexpectedEOF}, // tests internal behavior
+}
+
+func TestReadBody(t *testing.T) {
+	for _, tt := range readBodyTests {
+		c := &Conn{reader: strings.NewReader(tt.body)}
+		actual, err := c.ReadBody(tt.length)
+		if actual := string(actual); actual != tt.expected || err != tt.err {
+			t.Errorf("ReadBody(%q): expected %q %v , got %q %v", tt.body, tt.expected, tt.err, actual, err)
 		}
 	}
 }
