@@ -9,8 +9,19 @@
 // higher level interfaces in the gorilla/http package.
 package client
 
+// Header represents a HTTP header.
+type Header struct {
+	Key   string
+	Value string
+}
+
 // Request represents a complete HTTP request.
 type Request struct {
+	Method  string
+	URI     string
+	Version string
+
+	Headers []Header
 }
 
 // Client represents a single connection to a http server. Client obeys KeepAlive conditions for
@@ -20,4 +31,15 @@ type Client struct {
 }
 
 // SendRequest marshalls req to the wire.
-func (c *Client) SendRequest(req *Request) error { return nil }
+func (c *Client) SendRequest(req *Request) error {
+	if err := c.WriteRequestLine(req.Method, req.URI, req.Version); err != nil {
+		return err
+	}
+	for _, h := range req.Headers {
+		if err := c.WriteHeader(h.Key, h.Value); err != nil {
+			return err
+		}
+	}
+	c.StartBody()
+	return c.WriteBody(nil)
+}

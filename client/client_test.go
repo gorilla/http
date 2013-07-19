@@ -8,7 +8,15 @@ import (
 var sendRequestTests = []struct {
 	Request
 	expected string
-}{}
+}{
+	{Request{
+		Method:  "GET",
+		URI:     "/",
+		Version: "HTTP/1.1",
+	},
+		"GET / HTTP/1.1\r\n\r\n",
+	},
+}
 
 func TestClientSendRequest(t *testing.T) {
 	for _, tt := range sendRequestTests {

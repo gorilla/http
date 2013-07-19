@@ -75,8 +75,9 @@ func (c *Conn) StartBody() {
 // Write body writer the buffer on the wire.
 func (c *Conn) WriteBody(buf []byte) error {
 	if c.phase != body {
-		return &phaseError{headers, c.phase}
+		return &phaseError{body, c.phase}
 	}
 	_, err := c.writer.Write(buf)
+	c.phase = requestline
 	return err
 }

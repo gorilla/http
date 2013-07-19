@@ -117,6 +117,20 @@ func TestStartBody(t *testing.T) {
 	}
 }
 
+func TestDoubleWriteBody(t *testing.T) {
+	var b bytes.Buffer
+	c := NewConn(&b)
+	c.StartBody()
+	if err := c.WriteBody([]byte{}); err != nil {
+		t.Fatal(err)
+	}
+	err := c.WriteBody([]byte{})
+	expected := `phase error: expected body, got requestline`
+	if actual := err.Error(); actual != expected {
+		t.Fatalf("phaseError.Error(): expected %q, got %q", expected, actual)
+	}
+}
+
 type header struct{ key, value string }
 type writeTest struct {
 	headers  []header
