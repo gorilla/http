@@ -2,8 +2,12 @@ package client
 
 import (
 	"bytes"
+	"io"
+	"strings"
 	"testing"
 )
+
+func b(s string) io.Reader { return strings.NewReader(s) }
 
 var sendRequestTests = []struct {
 	Request
@@ -13,6 +17,15 @@ var sendRequestTests = []struct {
 		Method:  "GET",
 		URI:     "/",
 		Version: "HTTP/1.1",
+		Body:    b("Hello world!"),
+	},
+		"GET / HTTP/1.1\r\n\r\nHello world!",
+	},
+	{Request{
+		Method:  "GET",
+		URI:     "/",
+		Version: "HTTP/1.1",
+		// no body
 	},
 		"GET / HTTP/1.1\r\n\r\n",
 	},

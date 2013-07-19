@@ -118,13 +118,12 @@ func TestStartBody(t *testing.T) {
 }
 
 func TestDoubleWriteBody(t *testing.T) {
-	var b bytes.Buffer
-	c := NewConn(&b)
+	c := NewConn(new(bytes.Buffer))
 	c.StartBody()
-	if err := c.WriteBody([]byte{}); err != nil {
+	if err := c.WriteBody(b("")); err != nil {
 		t.Fatal(err)
 	}
-	err := c.WriteBody([]byte{})
+	err := c.WriteBody(b(""))
 	expected := `phase error: expected body, got requestline`
 	if actual := err.Error(); actual != expected {
 		t.Fatalf("phaseError.Error(): expected %q, got %q", expected, actual)
@@ -154,7 +153,7 @@ func (c *Conn) Write(t *testing.T, w writeTest) {
 		}
 	}
 	c.StartBody()
-	if err := c.WriteBody([]byte(w.body)); err != nil {
+	if err := c.WriteBody(b(w.body)); err != nil {
 		t.Fatal(err)
 	}
 }

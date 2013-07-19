@@ -67,17 +67,18 @@ func (c *Conn) WriteHeader(key, value string) error {
 }
 
 // StartBody moves the Conn into the body phase, no further headers may be sent at this point.
-func (c *Conn) StartBody() {
+func (c *Conn) StartBody() error {
 	c.phase = body
-	c.writer.Write([]byte("\r\n")) // ignore error, the call to WriteBody will expose it.
+	_, err := c.writer.Write([]byte("\r\n"))
+	return err
 }
 
 // Write body writer the buffer on the wire.
-func (c *Conn) WriteBody(buf []byte) error {
+func (c *Conn) WriteBody(r io.Reader) error {
 	if c.phase != body {
 		return &phaseError{body, c.phase}
 	}
-	_, err := c.writer.Write(buf)
+	_, err := io.Copy(c.writer, r)
 	c.phase = requestline
 	return err
 }

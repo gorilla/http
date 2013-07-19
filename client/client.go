@@ -9,6 +9,8 @@
 // higher level interfaces in the gorilla/http package.
 package client
 
+import "io"
+
 // Header represents a HTTP header.
 type Header struct {
 	Key   string
@@ -22,6 +24,8 @@ type Request struct {
 	Version string
 
 	Headers []Header
+
+	Body io.Reader
 }
 
 // Client represents a single connection to a http server. Client obeys KeepAlive conditions for
@@ -40,6 +44,13 @@ func (c *Client) SendRequest(req *Request) error {
 			return err
 		}
 	}
-	c.StartBody()
-	return c.WriteBody(nil)
+	if err := c.StartBody(); err != nil {
+		return err
+	}
+	if req.Body != nil {
+		if err := c.WriteBody(req.Body); err != nil {
+			return err
+		}
+	}
+	return nil
 }
