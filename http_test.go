@@ -47,7 +47,7 @@ func TestInternalHttpServer(t *testing.T) {
 	newServer(t).Shutdown()
 }
 
-func TestGet(t *testing.T) {
+func testGet(t *testing.T) {
 	s := newServer(t)
 	defer s.Shutdown()
 	if _, err := http.Get(s.Root()); err != nil {

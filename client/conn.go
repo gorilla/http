@@ -8,12 +8,15 @@ import (
 type phase int
 
 const (
-	headers phase = 1
-	body    phase = 2
+	requestline phase = iota
+	headers
+	body
 )
 
 func (p phase) String() string {
 	switch p {
+	case requestline:
+		return "requestline"
 	case headers:
 		return "headers"
 	case body:
@@ -43,6 +46,16 @@ func NewConn(w io.Writer) *Conn { return &Conn{writer: w} }
 
 // StartHeaders moves the Conn into the headers phase
 func (c *Conn) StartHeaders() { c.phase = headers }
+
+// WriteRequestLine writes the RequestLine and moves the Conn to the headers phase
+func (c *Conn) WriteRequestLine(method, uri, version string) error {
+	if c.phase != requestline {
+		return &phaseError{requestline, c.phase}
+	}
+	_, err := fmt.Fprintf(c.writer, "%s %s %s\r\n", method, uri, version)
+	c.StartHeaders()
+	return err
+}
 
 // WriteHeader writes the canonical header form to the wire.
 func (c *Conn) WriteHeader(key, value string) error {

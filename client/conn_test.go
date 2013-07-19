@@ -9,7 +9,7 @@ var phaseStringTests = []struct {
 	phase
 	expected string
 }{
-	{0, "UNKNOWN"},
+	{0, "requestline"},
 	{1, "headers"},
 	{2, "body"},
 	{3, "UNKNOWN"},
@@ -30,9 +30,34 @@ func TestPhaseError(t *testing.T) {
 	if _, ok := err.(*phaseError); !ok {
 		t.Fatalf("expected %T, got %v", new(phaseError), err)
 	}
-	expected := `phase error: expected headers, got UNKNOWN`
+	expected := `phase error: expected headers, got requestline`
 	if actual := err.Error(); actual != expected {
 		t.Fatalf("phaseError.Error(): expected %q, got %q", expected, actual)
+	}
+}
+
+func TestNewConn(t *testing.T) {
+	var b bytes.Buffer
+	NewConn(&b)
+}
+
+var writeRequestLineTests = []struct {
+	method, uri, version string
+	expected             string
+}{
+	{"GET", "/foo", "HTTP/1.0", "GET /foo HTTP/1.0\r\n"},
+}
+
+func TestConnWriteRequestLine(t *testing.T) {
+	for _, tt := range writeRequestLineTests {
+		var b bytes.Buffer
+		c := NewConn(&b)
+		if err := c.WriteRequestLine(tt.method, tt.uri, tt.version); err != nil {
+			t.Fatalf("Conn.WriteRequestLine(%q, %q, %q): %v", tt.method, tt.uri, tt.version, err)
+		}
+		if actual := b.String(); actual != tt.expected {
+			t.Errorf("Conn.WriteRequestLine(%q, %q, %q): expected %q, got %q", tt.method, tt.uri, tt.version, tt.expected, actual)
+		}
 	}
 }
 
@@ -41,11 +66,6 @@ var writeHeaderTests = []struct {
 	expected   string
 }{
 	{"Host", "localhost", "Host: localhost\r\n"},
-}
-
-func TestNewConn(t *testing.T) {
-	var b bytes.Buffer
-	NewConn(&b)
 }
 
 func TestConnWriteHeader(t *testing.T) {
