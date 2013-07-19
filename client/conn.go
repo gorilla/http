@@ -2,8 +2,10 @@ package client
 
 import (
 	"bufio"
+	"errors"
 	"fmt"
 	"io"
+	"strings"
 )
 
 type phase int
@@ -96,4 +98,21 @@ func (c *Conn) ReadStatusLine() (int, string, error) {
 		return 0, "", s.Err()
 	}
 	return code, s.Text(), s.Err()
+}
+
+// ReadHeader reads a http header.
+func (c *Conn) ReadHeader() (string, string, bool, error) {
+	s := bufio.NewScanner(c.reader)
+	if !s.Scan() {
+		return "", "", false, s.Err()
+	}
+	line := s.Text()
+	if line == "" {
+		return "", "", true, nil // last header line
+	}
+	v := strings.SplitN(line, ":", 2)
+	if len(v) != 2 {
+		return "", "", false, errors.New("invalid header line")
+	}
+	return strings.TrimSpace(v[0]), strings.TrimSpace(v[1]), false, nil
 }

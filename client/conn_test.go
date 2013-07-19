@@ -190,3 +190,29 @@ func TestReadStatusLine(t *testing.T) {
 		}
 	}
 }
+
+var readHeaderTest = []struct {
+	header     string
+	key, value string
+	done       bool
+}{
+	{"Host: localhost\r\n", "Host", "localhost", false},
+	{"Host: localhost\r\n\r\n", "Host", "localhost", false},
+	{"Connection:close\r\n", "Connection", "close", false},
+	{"Connection:close\r\n\r\n", "Connection", "close", false},
+	{"Vary : gzip\r\n", "Vary", "gzip", false},
+	{"\r\n", "", "", true},
+}
+
+func TestReadHeader(t *testing.T) {
+	for _, tt := range readHeaderTest {
+		c := &Conn{reader: strings.NewReader(tt.header)}
+		key, value, done, err := c.ReadHeader()
+		if err != nil {
+			t.Fatalf("ReadHeader(%q): %v", tt.header, err)
+		}
+		if key != tt.key || value != tt.value || done != tt.done {
+			t.Errorf("ReadHeader: expected %q %q %v, got %q %q %v", tt.key, tt.value, tt.done, key, value, done)
+		}
+	}
+}
