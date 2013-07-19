@@ -61,6 +61,19 @@ func TestConnWriteRequestLine(t *testing.T) {
 	}
 }
 
+func TestConnDoubleRequestLine(t *testing.T) {
+	var b bytes.Buffer
+	c := NewConn(&b)
+	if err := c.WriteRequestLine("GET", "/hello", "HTTP/0.9"); err != nil {
+		t.Fatal(err)
+	}
+	err := c.WriteRequestLine("GET", "/hello", "HTTP/0.9")
+	expected := `phase error: expected requestline, got headers`
+	if actual := err.Error(); actual != expected {
+		t.Fatalf("phaseError.Error(): expected %q, got %q", expected, actual)
+	}
+}
+
 var writeHeaderTests = []struct {
 	key, value string
 	expected   string
