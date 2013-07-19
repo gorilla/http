@@ -38,6 +38,9 @@ type Conn struct {
 	writer io.Writer
 }
 
+// NewConn returns a new *Conn
+func NewConn(w io.Writer) *Conn { return &Conn{writer: w} }
+
 // StartHeaders moves the Conn into the headers phase
 func (c *Conn) StartHeaders() { c.phase = headers }
 

@@ -43,10 +43,15 @@ var writeHeaderTests = []struct {
 	{"Host", "localhost", "Host: localhost\r\n"},
 }
 
+func TestNewConn(t *testing.T) {
+	var b bytes.Buffer
+	NewConn(&b)
+}
+
 func TestConnWriteHeader(t *testing.T) {
 	for _, tt := range writeHeaderTests {
 		var b bytes.Buffer
-		c := &Conn{writer: &b}
+		c := NewConn(&b)
 		c.StartHeaders()
 		if err := c.WriteHeader(tt.key, tt.value); err != nil {
 			t.Fatalf("Conn.WriteHeader(%q, %q): %v", tt.key, tt.value, err)
@@ -59,7 +64,7 @@ func TestConnWriteHeader(t *testing.T) {
 
 func TestStartBody(t *testing.T) {
 	var b bytes.Buffer
-	c := &Conn{writer: &b}
+	c := NewConn(&b)
 	c.StartHeaders()
 	if err := c.WriteHeader("Host", "localhost"); err != nil {
 		t.Fatal(err)
@@ -110,7 +115,7 @@ func (c *Conn) Write(t *testing.T, w writeTest) {
 func TestWrite(t *testing.T) {
 	for _, tt := range writeTests {
 		var b bytes.Buffer
-		c := &Conn{writer: &b}
+		c := NewConn(&b)
 		c.Write(t, tt)
 		if actual := b.String(); actual != tt.expected {
 			t.Errorf("TestWrite: expected %q, got %q", tt.expected, actual)

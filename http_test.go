@@ -1,22 +1,22 @@
 package http_test
 
 import (
-	"testing"
+	"fmt"
 	"net"
 	stdhttp "net/http"
-	"fmt"
+	"testing"
 
 	"github.com/gorilla/http"
 )
 
-var localhost = &net.TCPAddr {
-	IP: net.IP{ 127, 0, 0, 1},
-	Port: 0, 	// os assigned
+var localhost = &net.TCPAddr{
+	IP:   net.IP{127, 0, 0, 1},
+	Port: 0, // os assigned
 }
 
 type server struct {
 	*testing.T
-	net.Listener	
+	net.Listener
 }
 
 // Shutdown should be called to terminate this server.
@@ -32,13 +32,15 @@ func (s *server) Root() string {
 // starts a new net/http http server
 func newServer(t *testing.T) *server {
 	l, err := net.ListenTCP("tcp4", localhost)
-	if err != nil { t.Fatal(err) }
+	if err != nil {
+		t.Fatal(err)
+	}
 	go func() {
 		if err := stdhttp.Serve(l, nil); err != nil {
 			// t.Error(err)
 		}
 	}()
-	return &server { t, l }
+	return &server{t, l}
 }
 
 func TestInternalHttpServer(t *testing.T) {

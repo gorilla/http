@@ -16,7 +16,7 @@ type Request struct {
 // Client represents a single connection to a http server. Client obeys KeepAlive conditions for
 // HTTP but connection pooling is expected to be handled at a higher layer.
 type Client struct {
-	Conn
+	*Conn
 }
 
 // SendRequest marshalls req to the wire.

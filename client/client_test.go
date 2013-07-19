@@ -13,7 +13,7 @@ var sendRequestTests = []struct {
 func TestClientSendRequest(t *testing.T) {
 	for _, tt := range sendRequestTests {
 		var b bytes.Buffer
-		client := &Client{Conn: Conn{writer: &b}}
+		client := &Client{Conn: NewConn(&b)}
 		if err := client.SendRequest(&tt.Request); err != nil {
 			t.Fatalf("client.SendRequest(): %v", err)
 		}
