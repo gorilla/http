@@ -1,6 +1,7 @@
 package client
 
 import (
+	"bytes"
 	"testing"
 )
 
@@ -32,5 +33,87 @@ func TestPhaseError(t *testing.T) {
 	expected := `phase error: expected headers, got UNKNOWN`
 	if actual := err.Error(); actual != expected {
 		t.Fatalf("phaseError.Error(): expected %q, got %q", expected, actual)
+	}
+}
+
+var writeHeaderTests = []struct {
+	key, value string
+	expected   string
+}{
+	{"Host", "localhost", "Host: localhost\r\n"},
+}
+
+func TestConnWriteHeader(t *testing.T) {
+	for _, tt := range writeHeaderTests {
+		var b bytes.Buffer
+		c := &Conn{writer: &b}
+		c.StartHeaders()
+		if err := c.WriteHeader(tt.key, tt.value); err != nil {
+			t.Fatalf("Conn.WriteHeader(%q, %q): %v", tt.key, tt.value, err)
+		}
+		if actual := b.String(); actual != tt.expected {
+			t.Errorf("Conn.WriteHeader(%q, %q): expected %q, got %q", tt.key, tt.value, tt.expected, actual)
+		}
+	}
+}
+
+func TestStartBody(t *testing.T) {
+	var b bytes.Buffer
+	c := &Conn{writer: &b}
+	c.StartHeaders()
+	if err := c.WriteHeader("Host", "localhost"); err != nil {
+		t.Fatal(err)
+	}
+	c.StartBody()
+	err := c.WriteHeader("Connection", "close")
+	if _, ok := err.(*phaseError); !ok {
+		t.Fatalf("expected %T, got %v", new(phaseError), err)
+	}
+	expected := `phase error: expected headers, got body`
+	if actual := err.Error(); actual != expected {
+		t.Fatalf("phaseError.Error(): expected %q, got %q", expected, actual)
+	}
+	expected = "Host: localhost\r\n\r\n"
+	if actual := b.String(); actual != expected {
+		t.Fatalf("StartBody: expected %q, got %q", expected, actual)
+	}
+}
+
+type header struct{ key, value string }
+type writeTest struct {
+	headers  []header
+	body     string
+	expected string
+}
+
+var writeTests = []writeTest{
+	{[]header{{"Host", "localhost"}, {"Connection", "close"}},
+		"abcd1234",
+		"Host: localhost\r\nConnection: close\r\n\r\nabcd1234",
+	},
+}
+
+// test only method, real call will come from Client.
+func (c *Conn) Write(t *testing.T, w writeTest) {
+	c.StartHeaders()
+	for _, h := range w.headers {
+		if err := c.WriteHeader(h.key, h.value); err != nil {
+			t.Fatal(err)
+		}
+	}
+	c.StartBody()
+	if err := c.WriteBody([]byte(w.body)); err != nil {
+		t.Fatal(err)
+	}
+}
+
+func TestWrite(t *testing.T) {
+	for _, tt := range writeTests {
+		var b bytes.Buffer
+		c := &Conn{writer: &b}
+		c.Write(t, tt)
+		if actual := b.String(); actual != tt.expected {
+			t.Errorf("TestWrite: expected %q, got %q", tt.expected, actual)
+		}
 	}
 }
