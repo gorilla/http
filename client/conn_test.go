@@ -175,19 +175,19 @@ var readStatusLineTests = []struct {
 	line string
 	code int
 	msg  string
+	err  error
 }{
-	{"200 OK\r\n", 200, "OK"},
+	{"200 OK\r\n", 200, "OK", nil},
+	// 	{"200 OK", 0, "", nil},
+	{"200", 0, "", io.EOF},
 }
 
 func TestReadStatusLine(t *testing.T) {
 	for _, tt := range readStatusLineTests {
 		c := &Conn{reader: strings.NewReader(tt.line)}
 		code, msg, err := c.ReadStatusLine()
-		if err != nil {
-			t.Fatal(err)
-		}
-		if code != tt.code || msg != tt.msg {
-			t.Errorf("ReadStatusLine: expected \"%d %s\", got \"%d %s\"", tt.code, tt.msg, code, msg)
+		if code != tt.code || msg != tt.msg || err != tt.err {
+			t.Errorf("ReadStatusLine(%q): expected %d %q %v, got %d %q %v", tt.line, tt.code, tt.msg, tt.err, code, msg, err)
 		}
 	}
 }

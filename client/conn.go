@@ -95,9 +95,13 @@ func (c *Conn) ReadStatusLine() (int, string, error) {
 	}
 	s := bufio.NewScanner(c.reader)
 	if !s.Scan() {
-		return 0, "", s.Err()
+		return 0, "", io.EOF
 	}
-	return code, s.Text(), s.Err()
+	text := s.Text()
+	if text == "" {
+		return 0, "", io.EOF
+	}
+	return code, text, s.Err()
 }
 
 // ReadHeader reads a http header.
