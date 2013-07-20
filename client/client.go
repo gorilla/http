@@ -9,7 +9,11 @@
 // higher level interfaces in the gorilla/http package.
 package client
 
-import "io"
+import (
+	"errors"
+	"fmt"
+	"io"
+)
 
 // Header represents a HTTP header.
 type Header struct {
@@ -34,7 +38,7 @@ type Client struct {
 	*Conn
 }
 
-// SendRequest marshalls req to the wire.
+// SendRequest marshalls a HTTP request to the wire.
 func (c *Client) SendRequest(req *Request) error {
 	if err := c.WriteRequestLine(req.Method, req.URI, req.Version); err != nil {
 		return err
@@ -53,4 +57,37 @@ func (c *Client) SendRequest(req *Request) error {
 		}
 	}
 	return nil
+}
+
+// Status represents an HTTP status code.
+type Status struct {
+	Code    int
+	Message string
+}
+
+func (s Status) String() string { return fmt.Sprintf("%d %s", s.Code, s.Message) }
+
+var invalidStatus Status
+
+// ReadResponse unmarshalls a HTTP response.
+func (c *Client) ReadResponse() (Status, []Header, error) {
+	code, msg, err := c.ReadStatusLine()
+	if err != nil {
+		return invalidStatus, nil, err
+	}
+	var headers []Header
+	for {
+		key, value, done, err := c.ReadHeader()
+		if err != nil {
+			return invalidStatus, nil, err
+		}
+		if done {
+			break
+		}
+		if key == "" || value == "" {
+			return invalidStatus, nil, errors.New("invalid header")
+		}
+		headers = append(headers, Header{key, value})
+	}
+	return Status{code, msg}, headers, nil
 }
