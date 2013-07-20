@@ -70,11 +70,13 @@ func TestClientReadResponse(t *testing.T) {
 	for _, tt := range readResponseTests {
 		client := &Client{Conn: &Conn{reader: b(tt.data)}}
 		status, headers, err := client.ReadResponse()
-		if status != tt.Status || err != tt.err {
-			t.Errorf("client.ReadRequest(): expected %q %v, got %q %v", tt.Status, tt.err, status, err)
+		if status != tt.Status {
+			t.Errorf("client.ReadRequest(): expected %q, got %q", tt.Status, status)
+			t.Error(err)
+			continue
 		}
-		if !reflect.DeepEqual(tt.headers, headers) {
-			t.Errorf("client.ReadRequest(): expected %v, got %v", tt.headers, headers)
+		if !reflect.DeepEqual(tt.headers, headers) || err != tt.err {
+			t.Errorf("client.ReadRequest(): expected %v %v, got %v %v", tt.headers, tt.err, headers, err)
 		}
 	}
 }

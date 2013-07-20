@@ -178,6 +178,7 @@ var readStatusLineTests = []struct {
 	err  error
 }{
 	{"200 OK\r\n", 200, "OK", nil},
+	{"200 OK\r\n\r\n", 200, "OK", nil},
 	// 	{"200 OK", 0, "", nil},
 	{"200", 0, "", io.EOF},
 }
@@ -214,6 +215,45 @@ func TestReadHeader(t *testing.T) {
 		}
 		if key != tt.key || value != tt.value || done != tt.done {
 			t.Errorf("ReadHeader: expected %q %q %v, got %q %q %v", tt.key, tt.value, tt.done, key, value, done)
+		}
+	}
+}
+
+var readHeadersTests = []struct {
+	headers  string
+	expected []Header
+	done     bool
+}{
+	//        {"Host: localhost\r\n", []Header{{"Host", "localhost"}}, false},
+	{"Host: localhost\r\n\r\n", []Header{{"Host", "localhost"}}, true},
+	//        {"Connection:close\r\n", []Header{{"Connection", "close"}}, false},
+	//        {"Connection:close\r\n\r\n", []Header{{"Connection", "close"}}, false},
+	//        {"Vary : gzip\r\n", []Header{{"Vary", "gzip"}}, false},
+	//        {"\r\n", nil, true},
+	//	{"Host: localhost\r\nConnection:close\r\n", []Header{{"Host", "localhost"},{"Connection","close"}}, false},
+	//	{"Host: localhost\r\nConnection:close\r\n\r\n", []Header{{"Host", "localhost"},{"Connection","close"}}, true},
+}
+
+func TestReadHeaders(t *testing.T) {
+NEXT:
+	for _, tt := range readHeadersTests {
+		c := &Conn{reader: strings.NewReader(tt.headers)}
+		var done bool
+		var key, value string
+		var err error
+		for _, h := range tt.expected {
+			key, value, done, err = c.ReadHeader()
+			if err != nil {
+				t.Errorf("ReadHeader(%q): %v", tt.headers, err)
+				break NEXT
+			}
+			if key != h.Key || value != h.Value {
+				t.Errorf("ReadHeader(%q): expected %q %q, got %q %q", tt.headers, h.Key, h.Value, key, value)
+				break NEXT
+			}
+		}
+		if tt.done != done {
+			t.Errorf("ReadHeader(%q): done: expected %v, got %v", tt.headers, tt.done, done)
 		}
 	}
 }

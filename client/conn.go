@@ -108,13 +108,15 @@ func (c *Conn) ReadStatusLine() (int, string, error) {
 func (c *Conn) ReadHeader() (string, string, bool, error) {
 	s := bufio.NewScanner(c.reader)
 	if !s.Scan() {
-		return "", "", false, s.Err()
+		return "", "", true, s.Err()
 	}
 	line := s.Text()
+	fmt.Printf("line: %q ", line)
 	if line == "" {
 		return "", "", true, nil // last header line
 	}
 	v := strings.SplitN(line, ":", 2)
+	fmt.Printf("%v\n", v)
 	if len(v) != 2 {
 		return "", "", false, errors.New("invalid header line")
 	}

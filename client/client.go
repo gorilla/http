@@ -85,7 +85,7 @@ func (c *Client) ReadResponse() (Status, []Header, error) {
 			break
 		}
 		if key == "" || value == "" {
-			return invalidStatus, nil, errors.New("invalid header")
+			return Status{code, msg}, nil, errors.New("invalid header")
 		}
 		headers = append(headers, Header{key, value})
 	}
