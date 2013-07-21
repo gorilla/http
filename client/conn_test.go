@@ -224,11 +224,11 @@ var readHeadersTests = []struct {
 	expected []Header
 	done     bool
 }{
-	//        {"Host: localhost\r\n", []Header{{"Host", "localhost"}}, false},
-	{"Host: localhost\r\n\r\n", []Header{{"Host", "localhost"}}, true},
-	//        {"Connection:close\r\n", []Header{{"Connection", "close"}}, false},
-	//        {"Connection:close\r\n\r\n", []Header{{"Connection", "close"}}, false},
-	//        {"Vary : gzip\r\n", []Header{{"Vary", "gzip"}}, false},
+	{"Host: localhost\r\n", []Header{{"Host", "localhost"}}, false},
+	//	{"Host: localhost\r\n\r\n", []Header{{"Host", "localhost"}}, true},
+	{"Connection:close\r\n", []Header{{"Connection", "close"}}, false},
+	{"Connection:close\r\n\r\n", []Header{{"Connection", "close"}}, false},
+	{"Vary : gzip\r\n", []Header{{"Vary", "gzip"}}, false},
 	//        {"\r\n", nil, true},
 	//	{"Host: localhost\r\nConnection:close\r\n", []Header{{"Host", "localhost"},{"Connection","close"}}, false},
 	//	{"Host: localhost\r\nConnection:close\r\n\r\n", []Header{{"Host", "localhost"},{"Connection","close"}}, true},

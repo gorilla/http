@@ -111,12 +111,10 @@ func (c *Conn) ReadHeader() (string, string, bool, error) {
 		return "", "", true, s.Err()
 	}
 	line := s.Text()
-	fmt.Printf("line: %q ", line)
 	if line == "" {
 		return "", "", true, nil // last header line
 	}
 	v := strings.SplitN(line, ":", 2)
-	fmt.Printf("%v\n", v)
 	if len(v) != 2 {
 		return "", "", false, errors.New("invalid header line")
 	}
