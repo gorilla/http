@@ -3,7 +3,6 @@ package client
 import (
 	"bytes"
 	"io"
-	"strings"
 	"testing"
 )
 
@@ -185,7 +184,7 @@ var readStatusLineTests = []struct {
 
 func TestReadStatusLine(t *testing.T) {
 	for _, tt := range readStatusLineTests {
-		c := &Conn{reader: strings.NewReader(tt.line)}
+		c := &Conn{reader: b(tt.line)}
 		code, msg, err := c.ReadStatusLine()
 		if code != tt.code || msg != tt.msg || err != tt.err {
 			t.Errorf("ReadStatusLine(%q): expected %d %q %v, got %d %q %v", tt.line, tt.code, tt.msg, tt.err, code, msg, err)
@@ -208,7 +207,7 @@ var readHeaderTests = []struct {
 
 func TestReadHeader(t *testing.T) {
 	for _, tt := range readHeaderTests {
-		c := &Conn{reader: strings.NewReader(tt.header)}
+		c := &Conn{reader: b(tt.header)}
 		key, value, done, err := c.ReadHeader()
 		if err != nil {
 			t.Fatalf("ReadHeader(%q): %v", tt.header, err)
@@ -237,7 +236,7 @@ var readHeadersTests = []struct {
 func TestReadHeaders(t *testing.T) {
 NEXT:
 	for _, tt := range readHeadersTests {
-		c := &Conn{reader: strings.NewReader(tt.headers)}
+		c := &Conn{reader: b(tt.headers)}
 		var done bool
 		var key, value string
 		var err error
@@ -271,7 +270,7 @@ var readBodyTests = []struct {
 
 func TestReadBody(t *testing.T) {
 	for _, tt := range readBodyTests {
-		c := &Conn{reader: strings.NewReader(tt.body)}
+		c := &Conn{reader: b(tt.body)}
 		actual, err := c.ReadBody(tt.length)
 		if actual := string(actual); actual != tt.expected || err != tt.err {
 			t.Errorf("ReadBody(%q): expected %q %v , got %q %v", tt.body, tt.expected, tt.err, actual, err)

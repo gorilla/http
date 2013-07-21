@@ -42,13 +42,15 @@ func (p *phaseError) Error() string {
 type Conn struct {
 	phase
 	writer io.Writer
-	reader io.Reader
+	reader *bufio.Reader
 }
+
+const readerBuffer = 4096
 
 // NewConn returns a new *Conn
 func NewConn(rw io.ReadWriter) *Conn {
 	return &Conn{
-		reader: rw,
+		reader: bufio.NewReaderSize(rw, readerBuffer),
 		writer: rw,
 	}
 }

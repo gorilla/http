@@ -1,14 +1,14 @@
 package client
 
 import (
+	"bufio"
 	"bytes"
-	"io"
 	"reflect"
 	"strings"
 	"testing"
 )
 
-func b(s string) io.Reader { return strings.NewReader(s) }
+func b(s string) *bufio.Reader { return bufio.NewReader(strings.NewReader(s)) }
 
 var sendRequestTests = []struct {
 	Request
