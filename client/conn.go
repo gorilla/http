@@ -6,7 +6,6 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"strings"
 )
 
 type phase int
@@ -113,19 +112,18 @@ func (c *Conn) ReadStatusLine() (int, string, error) {
 
 // ReadHeader reads a http header.
 func (c *Conn) ReadHeader() (string, string, bool, error) {
-	s := bufio.NewScanner(c.reader)
-	if !s.Scan() {
-		return "", "", true, s.Err()
+	line, err := c.readLine()
+	if err != nil {
+		return "", "", false, err
 	}
-	line := s.Text()
-	if line == "" {
-		return "", "", true, nil // last header line
+	if string(line) == "\r\n" {
+		return "", "", true, nil
 	}
-	v := strings.SplitN(line, ":", 2)
+	v := bytes.SplitN(line, []byte(":"), 2)
 	if len(v) != 2 {
 		return "", "", false, errors.New("invalid header line")
 	}
-	return strings.TrimSpace(v[0]), strings.TrimSpace(v[1]), false, nil
+	return string(bytes.TrimSpace(v[0])), string(bytes.TrimSpace(v[1])), false, nil
 }
 
 // ReadBody returns length bytes of body
