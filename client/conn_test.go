@@ -277,3 +277,24 @@ func TestReadBody(t *testing.T) {
 		}
 	}
 }
+
+var readLineTests = []struct {
+	line     string
+	expected string
+	err      error
+}{
+	{"200 OK\r\n", "200 OK\r\n", nil},
+	{"200 OK\n", "200 OK\n", nil},
+	{"200 OK", "200 OK", io.EOF},
+	{"200 OK\r\n\r\n", "200 OK\r\n", nil},
+}
+
+func TestReadLine(t *testing.T) {
+	for _, tt := range readLineTests {
+		c := &Conn{reader: b(tt.line)}
+		actual, err := c.readLine()
+		if actual := string(actual); actual != tt.expected || err != tt.err {
+			t.Errorf("readLine(%q): expected %q %v, got %q, %v", tt.line, tt.expected, tt.err, actual, err)
+		}
+	}
+}

@@ -136,3 +136,8 @@ func (c *Conn) ReadBody(length int) ([]byte, error) {
 	_, err := io.ReadFull(c.reader, v)
 	return v, err
 }
+
+// readLine returns a []byte terminated by a \r\n.
+func (c *Conn) readLine() ([]byte, error) {
+	return c.reader.ReadBytes('\n')
+}
