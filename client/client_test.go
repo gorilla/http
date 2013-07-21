@@ -3,6 +3,7 @@ package client
 import (
 	"bufio"
 	"bytes"
+	"io"
 	"reflect"
 	"strings"
 	"testing"
@@ -64,6 +65,9 @@ var readResponseTests = []struct {
 }{
 	{"200 OK\r\n\r\n", Status{200, "OK"}, nil, nil},
 	{"404 Not found\r\n\r\n", Status{404, "Not found"}, nil, nil},
+	{"200 OK\r\nHost: localhost\r\n\r\n", Status{200, "OK"}, []Header{{"Host", "localhost"}}, nil},
+	{"200 OK\r\nHost: localhost\r\n", Status{200, "OK"}, []Header{{"Host", "localhost"}}, io.EOF},
+	{"200 OK\r\nHost: localhost\r\nConnection : close\r\n", Status{200, "OK"}, []Header{{"Host", "localhost"}, {"Connection", "close"}}, io.EOF},
 }
 
 func TestClientReadResponse(t *testing.T) {

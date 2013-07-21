@@ -5,8 +5,6 @@ import (
 	"net"
 	stdhttp "net/http"
 	"testing"
-
-	"github.com/gorilla/http"
 )
 
 var localhost = &net.TCPAddr{
@@ -45,12 +43,4 @@ func newServer(t *testing.T) *server {
 
 func TestInternalHttpServer(t *testing.T) {
 	newServer(t).Shutdown()
-}
-
-func testGet(t *testing.T) {
-	s := newServer(t)
-	defer s.Shutdown()
-	if _, err := http.Get(s.Root()); err != nil {
-		t.Fatal(err)
-	}
 }

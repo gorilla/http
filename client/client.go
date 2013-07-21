@@ -75,19 +75,20 @@ func (c *Client) ReadResponse() (Status, []Header, error) {
 	if err != nil {
 		return invalidStatus, nil, err
 	}
+	status := Status{code, msg}
 	var headers []Header
 	for {
-		key, value, done, err := c.ReadHeader()
-		if err != nil {
-			return invalidStatus, nil, err
-		}
-		if done {
+		var key, value string
+		var done bool
+		key, value, done, err = c.ReadHeader()
+		if err != nil || done {
 			break
 		}
 		if key == "" || value == "" {
-			return Status{code, msg}, nil, errors.New("invalid header")
+			err = errors.New("invalid header")
+			break
 		}
 		headers = append(headers, Header{key, value})
 	}
-	return Status{code, msg}, headers, nil
+	return status, headers, err
 }
