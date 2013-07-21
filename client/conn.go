@@ -2,6 +2,7 @@ package client
 
 import (
 	"bufio"
+	"bytes"
 	"errors"
 	"fmt"
 	"io"
@@ -96,19 +97,18 @@ func (c *Conn) WriteBody(r io.Reader) error {
 
 // ReadStatusLine reads the status line.
 func (c *Conn) ReadStatusLine() (int, string, error) {
-	var code int
-	if _, err := fmt.Fscanf(c.reader, "%d ", &code); err != nil {
+	line, err := c.readLine()
+	if err != nil {
 		return 0, "", err
 	}
-	s := bufio.NewScanner(c.reader)
-	if !s.Scan() {
-		return 0, "", io.EOF
+	reader := bytes.NewReader(line)
+	var code int
+	if _, err := fmt.Fscanf(reader, "%d ", &code); err != nil {
+		return 0, "", err
 	}
-	text := s.Text()
-	if text == "" {
-		return 0, "", io.EOF
-	}
-	return code, text, s.Err()
+	s := bufio.NewScanner(reader)
+	s.Scan()
+	return code, s.Text(), s.Err()
 }
 
 // ReadHeader reads a http header.

@@ -178,7 +178,7 @@ var readStatusLineTests = []struct {
 }{
 	{"200 OK\r\n", 200, "OK", nil},
 	{"200 OK\r\n\r\n", 200, "OK", nil},
-	// 	{"200 OK", 0, "", nil},
+	{"200 OK", 0, "", io.EOF},
 	{"200", 0, "", io.EOF},
 }
 
