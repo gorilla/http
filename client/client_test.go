@@ -127,3 +127,19 @@ func TestVersionString(t *testing.T) {
 		}
 	}
 }
+
+var requestLineStringTests = []struct {
+	RequestLine
+	expected string
+}{
+	{RequestLine{"GET", "/", HTTP_1_0}, "GET / HTTP/1.0"},
+	{RequestLine{"PUT", "/foo", HTTP_1_1}, "PUT /foo HTTP/1.1"},
+}
+
+func TestRequestLineString(t *testing.T) {
+	for _, tt := range requestLineStringTests {
+		if actual := tt.RequestLine.String(); actual != tt.expected {
+			t.Errorf("RequestLine{%q %q, %q}.String(): expected %q, got %q", tt.RequestLine.Method, tt.RequestLine.Path, tt.RequestLine.Version, tt.expected, actual)
+		}
+	}
+}

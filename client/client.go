@@ -104,3 +104,13 @@ func (c *Client) ReadResponse() (Status, []Header, io.Reader, error) {
 	}
 	return status, headers, c.ReadBody(), err
 }
+
+type RequestLine struct {
+	Method string
+	Path   string
+	Version
+}
+
+func (r *RequestLine) String() string {
+	return fmt.Sprintf("%s %s %s", r.Method, r.Path, r.Version.String())
+}
