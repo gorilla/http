@@ -22,6 +22,11 @@ type Version struct {
 
 func (v *Version) String() string { return fmt.Sprintf("HTTP/%d.%d", v.major, v.minor) }
 
+var (
+	HTTP_1_0 = Version{1, 0}
+	HTTP_1_1 = Version{1, 1}
+)
+
 // Header represents a HTTP header.
 type Header struct {
 	Key   string
@@ -30,9 +35,9 @@ type Header struct {
 
 // Request represents a complete HTTP request.
 type Request struct {
-	Method  string
-	URI     string
-	Version string
+	Method string
+	URI    string
+	Version
 
 	Headers []Header
 
@@ -47,7 +52,7 @@ type Client struct {
 
 // SendRequest marshalls a HTTP request to the wire.
 func (c *Client) SendRequest(req *Request) error {
-	if err := c.WriteRequestLine(req.Method, req.URI, req.Version); err != nil {
+	if err := c.WriteRequestLine(req.Method, req.URI, req.Version.String()); err != nil {
 		return err
 	}
 	for _, h := range req.Headers {

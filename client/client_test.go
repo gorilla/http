@@ -18,7 +18,7 @@ var sendRequestTests = []struct {
 	{Request{
 		Method:  "GET",
 		URI:     "/",
-		Version: "HTTP/1.1",
+		Version: HTTP_1_1,
 		// no body
 	},
 		"GET / HTTP/1.1\r\n\r\n",
@@ -26,7 +26,7 @@ var sendRequestTests = []struct {
 	{Request{
 		Method:  "GET",
 		URI:     "/",
-		Version: "HTTP/1.1",
+		Version: HTTP_1_1,
 		Body:    b("Hello world!"),
 	},
 		"GET / HTTP/1.1\r\n\r\nHello world!",
@@ -34,7 +34,7 @@ var sendRequestTests = []struct {
 	{Request{
 		Method:  "GET",
 		URI:     "/",
-		Version: "HTTP/1.1",
+		Version: HTTP_1_1,
 		Body:    b("Hello world!"),
 		Headers: []Header{{
 			Key: "Host", Value: "localhost",
