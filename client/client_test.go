@@ -109,3 +109,21 @@ func TestStatusString(t *testing.T) {
 		}
 	}
 }
+
+var versionStringTests = []struct {
+	Version
+	expected string
+}{
+	{Version{0, 9}, "HTTP/0.9"},
+	{Version{1, 0}, "HTTP/1.0"},
+	{Version{1, 1}, "HTTP/1.1"},
+	{Version{2, 0}, "HTTP/2.0"},
+}
+
+func TestVersionString(t *testing.T) {
+	for _, tt := range versionStringTests {
+		if actual := tt.Version.String(); actual != tt.expected {
+			t.Errorf("Version{%d, %d}.String(): expected %q, got %q", tt.Version.major, tt.Version.minor, tt.expected, actual)
+		}
+	}
+}

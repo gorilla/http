@@ -15,6 +15,13 @@ import (
 	"io"
 )
 
+// Version represents a HTTP version.
+type Version struct {
+	major, minor int
+}
+
+func (v *Version) String() string { return fmt.Sprintf("HTTP/%d.%d", v.major, v.minor) }
+
 // Header represents a HTTP header.
 type Header struct {
 	Key   string
