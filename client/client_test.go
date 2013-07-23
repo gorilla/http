@@ -61,19 +61,20 @@ var readResponseTests = []struct {
 	data string
 	Status
 	headers []Header
+	body    string
 	err     error
 }{
-	{"200 OK\r\n\r\n", Status{200, "OK"}, nil, nil},
-	{"404 Not found\r\n\r\n", Status{404, "Not found"}, nil, nil},
-	{"200 OK\r\nHost: localhost\r\n\r\n", Status{200, "OK"}, []Header{{"Host", "localhost"}}, nil},
-	{"200 OK\r\nHost: localhost\r\n", Status{200, "OK"}, []Header{{"Host", "localhost"}}, io.EOF},
-	{"200 OK\r\nHost: localhost\r\nConnection : close\r\n", Status{200, "OK"}, []Header{{"Host", "localhost"}, {"Connection", "close"}}, io.EOF},
+	{"HTTP/1.0 200 OK\r\n\r\n", Status{200, "OK"}, nil, "", nil},
+	{"HTTP/1.1 404 Not found\r\n\r\n", Status{404, "Not found"}, nil, "", nil},
+	{"HTTP/1.0 200 OK\r\nHost: localhost\r\n\r\n", Status{200, "OK"}, []Header{{"Host", "localhost"}}, "", nil},
+	{"HTTP/1.1 200 OK\r\nHost: localhost\r\n", Status{200, "OK"}, []Header{{"Host", "localhost"}}, "", io.EOF},
+	{"HTTP/1.0 200 OK\r\nHost: localhost\r\nConnection : close\r\n", Status{200, "OK"}, []Header{{"Host", "localhost"}, {"Connection", "close"}}, "", io.EOF},
 }
 
 func TestClientReadResponse(t *testing.T) {
 	for _, tt := range readResponseTests {
 		client := &Client{Conn: &Conn{reader: b(tt.data)}}
-		status, headers, err := client.ReadResponse()
+		status, headers, body, err := client.ReadResponse()
 		if status != tt.Status {
 			t.Errorf("client.ReadRequest(): expected %q, got %q", tt.Status, status)
 			t.Error(err)
@@ -81,6 +82,14 @@ func TestClientReadResponse(t *testing.T) {
 		}
 		if !reflect.DeepEqual(tt.headers, headers) || err != tt.err {
 			t.Errorf("client.ReadRequest(): expected %v %v, got %v %v", tt.headers, tt.err, headers, err)
+		}
+		if err != nil {
+			continue
+		}
+		var buf bytes.Buffer
+		_, err = io.Copy(&buf, body)
+		if actual := buf.String(); actual != tt.body || err != tt.err {
+			t.Errorf("client.ReadRequest(): expected %q %v, got %q %v", tt.body, tt.err, actual, err)
 		}
 	}
 }

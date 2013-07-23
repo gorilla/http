@@ -95,19 +95,20 @@ func (c *Conn) WriteBody(r io.Reader) error {
 }
 
 // ReadStatusLine reads the status line.
-func (c *Conn) ReadStatusLine() (int, string, error) {
+func (c *Conn) ReadStatusLine() (string, int, string, error) {
 	line, err := c.readLine()
 	if err != nil {
-		return 0, "", err
+		return "", 0, "", err
 	}
 	reader := bytes.NewReader(line)
+	var version string
 	var code int
-	if _, err := fmt.Fscanf(reader, "%d ", &code); err != nil {
-		return 0, "", err
+	if _, err := fmt.Fscanf(reader, "%s %d ", &version, &code); err != nil {
+		return "", 0, "", err
 	}
 	s := bufio.NewScanner(reader)
 	s.Scan()
-	return code, s.Text(), s.Err()
+	return version, code, s.Text(), s.Err()
 }
 
 // ReadHeader reads a http header.
@@ -126,13 +127,8 @@ func (c *Conn) ReadHeader() (string, string, bool, error) {
 	return string(bytes.TrimSpace(v[0])), string(bytes.TrimSpace(v[1])), false, nil
 }
 
-// ReadBody returns length bytes of body
-// TODO(dfc) temporary function, read readbody will return an io.Reader
-// TODO(dfc) doesn't handle chunked transfer encoding
-func (c *Conn) ReadBody(length int) ([]byte, error) {
-	v := make([]byte, length)
-	_, err := io.ReadFull(c.reader, v)
-	return v, err
+func (c *Conn) ReadBody() io.Reader {
+	return c.reader
 }
 
 // readLine returns a []byte terminated by a \r\n.

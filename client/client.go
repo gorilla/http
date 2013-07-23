@@ -70,13 +70,13 @@ func (s Status) String() string { return fmt.Sprintf("%d %s", s.Code, s.Message)
 var invalidStatus Status
 
 // ReadResponse unmarshalls a HTTP response.
-func (c *Client) ReadResponse() (Status, []Header, error) {
-	code, msg, err := c.ReadStatusLine()
+func (c *Client) ReadResponse() (Status, []Header, io.Reader, error) {
+	_, code, msg, err := c.ReadStatusLine()
+	var headers []Header
 	if err != nil {
-		return invalidStatus, nil, err
+		return invalidStatus, headers, nil, fmt.Errorf("ReadStatusLine: %v", err)
 	}
 	status := Status{code, msg}
-	var headers []Header
 	for {
 		var key, value string
 		var done bool
@@ -90,5 +90,5 @@ func (c *Client) ReadResponse() (Status, []Header, error) {
 		}
 		headers = append(headers, Header{key, value})
 	}
-	return status, headers, err
+	return status, headers, c.ReadBody(), err
 }
