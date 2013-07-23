@@ -56,6 +56,11 @@ Rate limiting in terms of number of total connections in use, number of connecti
 
 Gorilla/http has a strictly layered design where the high level gorilla/http pacakge is responsible for request composition and connection management and the lower level http/client package is strictly responsible for the http transaction and the lowest level wire format.
 
+Reliable DNS lookups
+--------------------
+
+gorilla/http uses an alternative DNS resolver library to avoid the limitations of the system libc resolver library.
+
 Robustness and correctness
 --------------------------
 
