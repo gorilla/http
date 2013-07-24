@@ -15,6 +15,18 @@ import (
 	"io"
 )
 
+// Version represents a HTTP version.
+type Version struct {
+	major, minor int
+}
+
+func (v *Version) String() string { return fmt.Sprintf("HTTP/%d.%d", v.major, v.minor) }
+
+var (
+	HTTP_1_0 = Version{1, 0}
+	HTTP_1_1 = Version{1, 1}
+)
+
 // Header represents a HTTP header.
 type Header struct {
 	Key   string
@@ -23,9 +35,9 @@ type Header struct {
 
 // Request represents a complete HTTP request.
 type Request struct {
-	Method  string
-	URI     string
-	Version string
+	Method string
+	URI    string
+	Version
 
 	Headers []Header
 
@@ -40,7 +52,7 @@ type Client struct {
 
 // SendRequest marshalls a HTTP request to the wire.
 func (c *Client) SendRequest(req *Request) error {
-	if err := c.WriteRequestLine(req.Method, req.URI, req.Version); err != nil {
+	if err := c.WriteRequestLine(req.Method, req.URI, req.Version.String()); err != nil {
 		return err
 	}
 	for _, h := range req.Headers {
@@ -70,13 +82,13 @@ func (s Status) String() string { return fmt.Sprintf("%d %s", s.Code, s.Message)
 var invalidStatus Status
 
 // ReadResponse unmarshalls a HTTP response.
-func (c *Client) ReadResponse() (Status, []Header, error) {
-	code, msg, err := c.ReadStatusLine()
+func (c *Client) ReadResponse() (Status, []Header, io.Reader, error) {
+	_, code, msg, err := c.ReadStatusLine()
+	var headers []Header
 	if err != nil {
-		return invalidStatus, nil, err
+		return invalidStatus, headers, nil, fmt.Errorf("ReadStatusLine: %v", err)
 	}
 	status := Status{code, msg}
-	var headers []Header
 	for {
 		var key, value string
 		var done bool
@@ -90,5 +102,15 @@ func (c *Client) ReadResponse() (Status, []Header, error) {
 		}
 		headers = append(headers, Header{key, value})
 	}
-	return status, headers, err
+	return status, headers, c.ReadBody(), err
+}
+
+type RequestLine struct {
+	Method string
+	Path   string
+	Version
+}
+
+func (r *RequestLine) String() string {
+	return fmt.Sprintf("%s %s %s", r.Method, r.Path, r.Version.String())
 }

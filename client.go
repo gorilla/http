@@ -1,7 +1,6 @@
 package http
 
 import (
-	"io"
 	"net"
 	"net/url"
 	"strings"
@@ -18,10 +17,10 @@ type Client struct {
 
 type Headers struct{}
 
-func (c *Client) Get(u string) (io.ReadCloser, *Headers, error) {
+func (c *Client) Get(u string) error {
 	url, err := url.Parse(u)
 	if err != nil {
-		return nil, nil, err
+		return err
 	}
 	host := url.Host
 	if !strings.Contains(host, ":") {
@@ -29,16 +28,17 @@ func (c *Client) Get(u string) (io.ReadCloser, *Headers, error) {
 	}
 	conn, err := net.Dial("tcp", host)
 	if err != nil {
-		return nil, nil, err
+		return err
 	}
 	var req client.Request
-	client := &client.Client{
+	c1 := &client.Client{
 		Conn: client.NewConn(conn),
 	}
-	if err := client.SendRequest(&req); err != nil {
-		return nil, nil, err
+	if err := c1.SendRequest(&req); err != nil {
+		return err
 	}
-	return new(rc), nil, nil
+	_, _, _, err = c1.ReadResponse()	
+	return err
 }
 
 type rc struct{}

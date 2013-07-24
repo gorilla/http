@@ -18,7 +18,7 @@ var sendRequestTests = []struct {
 	{Request{
 		Method:  "GET",
 		URI:     "/",
-		Version: "HTTP/1.1",
+		Version: HTTP_1_1,
 		// no body
 	},
 		"GET / HTTP/1.1\r\n\r\n",
@@ -26,7 +26,7 @@ var sendRequestTests = []struct {
 	{Request{
 		Method:  "GET",
 		URI:     "/",
-		Version: "HTTP/1.1",
+		Version: HTTP_1_1,
 		Body:    b("Hello world!"),
 	},
 		"GET / HTTP/1.1\r\n\r\nHello world!",
@@ -34,7 +34,7 @@ var sendRequestTests = []struct {
 	{Request{
 		Method:  "GET",
 		URI:     "/",
-		Version: "HTTP/1.1",
+		Version: HTTP_1_1,
 		Body:    b("Hello world!"),
 		Headers: []Header{{
 			Key: "Host", Value: "localhost",
@@ -61,19 +61,20 @@ var readResponseTests = []struct {
 	data string
 	Status
 	headers []Header
+	body    string
 	err     error
 }{
-	{"200 OK\r\n\r\n", Status{200, "OK"}, nil, nil},
-	{"404 Not found\r\n\r\n", Status{404, "Not found"}, nil, nil},
-	{"200 OK\r\nHost: localhost\r\n\r\n", Status{200, "OK"}, []Header{{"Host", "localhost"}}, nil},
-	{"200 OK\r\nHost: localhost\r\n", Status{200, "OK"}, []Header{{"Host", "localhost"}}, io.EOF},
-	{"200 OK\r\nHost: localhost\r\nConnection : close\r\n", Status{200, "OK"}, []Header{{"Host", "localhost"}, {"Connection", "close"}}, io.EOF},
+	{"HTTP/1.0 200 OK\r\n\r\n", Status{200, "OK"}, nil, "", nil},
+	{"HTTP/1.1 404 Not found\r\n\r\n", Status{404, "Not found"}, nil, "", nil},
+	{"HTTP/1.0 200 OK\r\nHost: localhost\r\n\r\n", Status{200, "OK"}, []Header{{"Host", "localhost"}}, "", nil},
+	{"HTTP/1.1 200 OK\r\nHost: localhost\r\n", Status{200, "OK"}, []Header{{"Host", "localhost"}}, "", io.EOF},
+	{"HTTP/1.0 200 OK\r\nHost: localhost\r\nConnection : close\r\n", Status{200, "OK"}, []Header{{"Host", "localhost"}, {"Connection", "close"}}, "", io.EOF},
 }
 
 func TestClientReadResponse(t *testing.T) {
 	for _, tt := range readResponseTests {
 		client := &Client{Conn: &Conn{reader: b(tt.data)}}
-		status, headers, err := client.ReadResponse()
+		status, headers, body, err := client.ReadResponse()
 		if status != tt.Status {
 			t.Errorf("client.ReadRequest(): expected %q, got %q", tt.Status, status)
 			t.Error(err)
@@ -81,6 +82,14 @@ func TestClientReadResponse(t *testing.T) {
 		}
 		if !reflect.DeepEqual(tt.headers, headers) || err != tt.err {
 			t.Errorf("client.ReadRequest(): expected %v %v, got %v %v", tt.headers, tt.err, headers, err)
+		}
+		if err != nil {
+			continue
+		}
+		var buf bytes.Buffer
+		_, err = io.Copy(&buf, body)
+		if actual := buf.String(); actual != tt.body || err != tt.err {
+			t.Errorf("client.ReadRequest(): expected %q %v, got %q %v", tt.body, tt.err, actual, err)
 		}
 	}
 }
@@ -97,6 +106,40 @@ func TestStatusString(t *testing.T) {
 	for _, tt := range statusStringTests {
 		if actual := tt.Status.String(); actual != tt.expected {
 			t.Errorf("Status{%d, %q}.String(): expected %q, got %q", tt.Status.Code, tt.Status.Message, tt.expected, actual)
+		}
+	}
+}
+
+var versionStringTests = []struct {
+	Version
+	expected string
+}{
+	{Version{0, 9}, "HTTP/0.9"},
+	{Version{1, 0}, "HTTP/1.0"},
+	{Version{1, 1}, "HTTP/1.1"},
+	{Version{2, 0}, "HTTP/2.0"},
+}
+
+func TestVersionString(t *testing.T) {
+	for _, tt := range versionStringTests {
+		if actual := tt.Version.String(); actual != tt.expected {
+			t.Errorf("Version{%d, %d}.String(): expected %q, got %q", tt.Version.major, tt.Version.minor, tt.expected, actual)
+		}
+	}
+}
+
+var requestLineStringTests = []struct {
+	RequestLine
+	expected string
+}{
+	{RequestLine{"GET", "/", HTTP_1_0}, "GET / HTTP/1.0"},
+	{RequestLine{"PUT", "/foo", HTTP_1_1}, "PUT /foo HTTP/1.1"},
+}
+
+func TestRequestLineString(t *testing.T) {
+	for _, tt := range requestLineStringTests {
+		if actual := tt.RequestLine.String(); actual != tt.expected {
+			t.Errorf("RequestLine{%q %q, %q}.String(): expected %q, got %q", tt.RequestLine.Method, tt.RequestLine.Path, tt.RequestLine.Version, tt.expected, actual)
 		}
 	}
 }
