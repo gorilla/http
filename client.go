@@ -31,13 +31,11 @@ func (c *Client) Get(u string) error {
 		return err
 	}
 	var req client.Request
-	c1 := &client.Client{
-		Conn: client.NewConn(conn),
-	}
+	c1 := client.NewClient(conn)
 	if err := c1.SendRequest(&req); err != nil {
 		return err
 	}
-	_, _, _, err = c1.ReadResponse()	
+	_, _, _, err = c1.ReadResponse()
 	return err
 }
 

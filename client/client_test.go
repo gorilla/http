@@ -12,6 +12,12 @@ import (
 // assert that client.client implements client.Client
 var _ Client = new(client)
 
+func TestNewClient(t *testing.T) {
+	var b bytes.Buffer
+	var r io.ReadWriter = &b
+	var _ Client = NewClient(r)
+}
+
 func b(s string) *bufio.Reader { return bufio.NewReader(strings.NewReader(s)) }
 
 var sendRequestTests = []struct {

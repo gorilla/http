@@ -51,6 +51,13 @@ type Client interface {
 	ReadResponse() (Status, []Header, io.Reader, error)
 }
 
+// NewClient returns a Client implementation which uses rw to communicate.
+func NewClient(rw io.ReadWriter) Client {
+	return &client{
+		Conn: NewConn(rw),
+	}
+}
+
 type client struct {
 	*Conn
 }
