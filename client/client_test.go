@@ -9,6 +9,9 @@ import (
 	"testing"
 )
 
+// assert that client.client implements client.Client
+var _ Client = new(client)
+
 func b(s string) *bufio.Reader { return bufio.NewReader(strings.NewReader(s)) }
 
 var sendRequestTests = []struct {
@@ -47,7 +50,7 @@ var sendRequestTests = []struct {
 func TestClientSendRequest(t *testing.T) {
 	for _, tt := range sendRequestTests {
 		var b bytes.Buffer
-		client := &Client{Conn: NewConn(&b)}
+		client := &client{Conn: NewConn(&b)}
 		if err := client.SendRequest(&tt.Request); err != nil {
 			t.Fatalf("client.SendRequest(): %v", err)
 		}
@@ -73,7 +76,7 @@ var readResponseTests = []struct {
 
 func TestClientReadResponse(t *testing.T) {
 	for _, tt := range readResponseTests {
-		client := &Client{Conn: &Conn{reader: b(tt.data)}}
+		client := &client{Conn: &Conn{reader: b(tt.data)}}
 		status, headers, body, err := client.ReadResponse()
 		if status != tt.Status {
 			t.Errorf("client.ReadRequest(): expected %q, got %q", tt.Status, status)

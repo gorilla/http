@@ -46,12 +46,17 @@ type Request struct {
 
 // Client represents a single connection to a http server. Client obeys KeepAlive conditions for
 // HTTP but connection pooling is expected to be handled at a higher layer.
-type Client struct {
+type Client interface {
+	SendRequest(*Request) error
+	ReadResponse() (Status, []Header, io.Reader, error)
+}
+
+type client struct {
 	*Conn
 }
 
 // SendRequest marshalls a HTTP request to the wire.
-func (c *Client) SendRequest(req *Request) error {
+func (c *client) SendRequest(req *Request) error {
 	if err := c.WriteRequestLine(req.Method, req.URI, req.Version.String()); err != nil {
 		return err
 	}
@@ -82,7 +87,7 @@ func (s Status) String() string { return fmt.Sprintf("%d %s", s.Code, s.Message)
 var invalidStatus Status
 
 // ReadResponse unmarshalls a HTTP response.
-func (c *Client) ReadResponse() (Status, []Header, io.Reader, error) {
+func (c *client) ReadResponse() (Status, []Header, io.Reader, error) {
 	_, code, msg, err := c.ReadStatusLine()
 	var headers []Header
 	if err != nil {
