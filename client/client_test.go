@@ -152,3 +152,18 @@ func TestRequestLineString(t *testing.T) {
 		}
 	}
 }
+
+var statusLineStringTests = []struct {
+	StatusLine
+	expected string
+}{
+	{StatusLine{HTTP_1_0, Status{200, "OK"}}, "HTTP/1.0 200 OK"},
+}
+
+func TestStatusLineString(t *testing.T) {
+	for _, tt := range statusLineStringTests {
+		if actual := tt.StatusLine.String(); actual != tt.expected {
+			t.Errorf("StatusLine(%q, %q).String(): expected %q, got %q", tt.StatusLine.Version, tt.StatusLine.Status.String(), tt.expected, actual)
+		}
+	}
+}

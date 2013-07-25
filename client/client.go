@@ -126,3 +126,12 @@ type RequestLine struct {
 func (r *RequestLine) String() string {
 	return fmt.Sprintf("%s %s %s", r.Method, r.Path, r.Version.String())
 }
+
+type StatusLine struct {
+	Version
+	Status
+}
+
+func (s *StatusLine) String() string {
+	return fmt.Sprintf("%s %s", s.Version.String(), s.Status.String())
+}
