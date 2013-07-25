@@ -190,6 +190,27 @@ func TestReadVersion(t *testing.T) {
 	}
 }
 
+var readStatusCodeTests = []struct {
+	line     string
+	expected int
+	err      error
+}{
+	{"200 OK\r\n", 200, nil},
+	{"200 OK", 200, nil},
+	{"200 ", 200, nil},
+	{"200", 0, io.EOF},
+}
+
+func TestReadStatusCode(t *testing.T) {
+	for _, tt := range readStatusCodeTests {
+		c := &Conn{reader: b(tt.line)}
+		actual, err := c.ReadStatusCode()
+		if actual != tt.expected || err != tt.err {
+			t.Errorf("ReadVersion(%q): expected %v %v, got %v %v", tt.line, tt.expected, tt.err, actual, err)
+		}
+	}
+}
+
 var readStatusLineTests = []struct {
 	line    string
 	version string

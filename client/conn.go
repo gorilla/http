@@ -148,6 +148,36 @@ func readVersionErr(pos int, expected, got byte) (Version, error) {
 	return invalidVersion, fmt.Errorf("ReadVersion: expected %q, got %q at position %v", expected, got, pos)
 }
 
+// ReadStatusCode reads the HTTP status code from the wire.
+func (c *Conn) ReadStatusCode() (int, error) {
+	var code int
+	for pos := 0; pos < len("200 "); pos++ {
+		c, err := c.reader.ReadByte()
+		if err != nil {
+			return 0, err
+		}
+		switch pos {
+		case 0, 1, 2:
+			switch c {
+			case '0', '1', '2', '3', '4', '5', '6', '7', '8', '9':
+				switch pos {
+				case 0:
+					code = int(int(c)-0x30) * 100
+				case 1:
+					code += int(int(c)-0x30) * 10
+				case 2:
+					code += int(int(c) - 0x30)
+				}
+			}
+		case 3:
+			if c != ' ' {
+				return 0, fmt.Errorf("ReadStatusCode: expected %q, got %q at position %v", ' ', c, pos)
+			}
+		}
+	}
+	return code, nil
+}
+
 // ReadStatusLine reads the status line.
 func (c *Conn) ReadStatusLine() (string, int, string, error) {
 	line, err := c.readLine()
