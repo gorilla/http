@@ -54,7 +54,7 @@ type Client interface {
 // NewClient returns a Client implementation which uses rw to communicate.
 func NewClient(rw io.ReadWriter) Client {
 	return &client{
-		Conn: NewConn(rw),
+		Conn: newConn(rw),
 	}
 }
 

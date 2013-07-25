@@ -47,8 +47,8 @@ type Conn struct {
 
 const readerBuffer = 4096
 
-// NewConn returns a new *Conn
-func NewConn(rw io.ReadWriter) *Conn {
+// newConn returns a new *Conn
+func newConn(rw io.ReadWriter) *Conn {
 	return &Conn{
 		reader: bufio.NewReaderSize(rw, readerBuffer),
 		writer: rw,

@@ -37,9 +37,9 @@ func TestPhaseError(t *testing.T) {
 	}
 }
 
-func TestNewConn(t *testing.T) {
+func TestnewConn(t *testing.T) {
 	var b bytes.Buffer
-	NewConn(&b)
+	newConn(&b)
 }
 
 var writeRequestLineTests = []struct {
@@ -52,7 +52,7 @@ var writeRequestLineTests = []struct {
 func TestConnWriteRequestLine(t *testing.T) {
 	for _, tt := range writeRequestLineTests {
 		var b bytes.Buffer
-		c := NewConn(&b)
+		c := newConn(&b)
 		if err := c.WriteRequestLine(tt.method, tt.uri, tt.version); err != nil {
 			t.Fatalf("Conn.WriteRequestLine(%q, %q, %q): %v", tt.method, tt.uri, tt.version, err)
 		}
@@ -64,7 +64,7 @@ func TestConnWriteRequestLine(t *testing.T) {
 
 func TestConnDoubleRequestLine(t *testing.T) {
 	var b bytes.Buffer
-	c := NewConn(&b)
+	c := newConn(&b)
 	if err := c.WriteRequestLine("GET", "/hello", "HTTP/0.9"); err != nil {
 		t.Fatal(err)
 	}
@@ -85,7 +85,7 @@ var writeHeaderTests = []struct {
 func TestConnWriteHeader(t *testing.T) {
 	for _, tt := range writeHeaderTests {
 		var b bytes.Buffer
-		c := NewConn(&b)
+		c := newConn(&b)
 		c.StartHeaders()
 		if err := c.WriteHeader(tt.key, tt.value); err != nil {
 			t.Fatalf("Conn.WriteHeader(%q, %q): %v", tt.key, tt.value, err)
@@ -98,7 +98,7 @@ func TestConnWriteHeader(t *testing.T) {
 
 func TestStartBody(t *testing.T) {
 	var b bytes.Buffer
-	c := NewConn(&b)
+	c := newConn(&b)
 	c.StartHeaders()
 	if err := c.WriteHeader("Host", "localhost"); err != nil {
 		t.Fatal(err)
@@ -119,7 +119,7 @@ func TestStartBody(t *testing.T) {
 }
 
 func TestDoubleWriteBody(t *testing.T) {
-	c := NewConn(new(bytes.Buffer))
+	c := newConn(new(bytes.Buffer))
 	c.StartBody()
 	if err := c.WriteBody(b("")); err != nil {
 		t.Fatal(err)
@@ -162,7 +162,7 @@ func (c *Conn) Write(t *testing.T, w writeTest) {
 func TestWrite(t *testing.T) {
 	for _, tt := range writeTests {
 		var b bytes.Buffer
-		c := NewConn(&b)
+		c := newConn(&b)
 		c.Write(t, tt)
 		if actual := b.String(); actual != tt.expected {
 			t.Errorf("TestWrite: expected %q, got %q", tt.expected, actual)

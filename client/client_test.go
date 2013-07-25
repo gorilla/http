@@ -56,7 +56,7 @@ var sendRequestTests = []struct {
 func TestClientSendRequest(t *testing.T) {
 	for _, tt := range sendRequestTests {
 		var b bytes.Buffer
-		client := &client{Conn: NewConn(&b)}
+		client := NewClient(&b)
 		if err := client.SendRequest(&tt.Request); err != nil {
 			t.Fatalf("client.SendRequest(): %v", err)
 		}
