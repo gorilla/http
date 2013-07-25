@@ -94,6 +94,23 @@ func (c *Conn) WriteBody(r io.Reader) error {
 	return err
 }
 
+var invalidVersion Version
+
+// ReadVersion reads a HTTP version string from the wire.
+func (c *Conn) ReadVersion() (Version, error) {
+	var version string
+	_, err := fmt.Fscanf(c.reader, "%s ", &version)
+	switch version {
+	case "HTTP/0.9":
+		return Version{0, 9}, nil
+	case "HTTP/1.0":
+		return Version{1, 0}, nil
+	case "HTTP/1.1":
+		return Version{1, 1}, nil
+	}
+	return invalidVersion, err
+}
+
 // ReadStatusLine reads the status line.
 func (c *Conn) ReadStatusLine() (string, int, string, error) {
 	line, err := c.readLine()

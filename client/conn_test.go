@@ -170,6 +170,25 @@ func TestWrite(t *testing.T) {
 	}
 }
 
+var readVersionTests = []struct {
+	line     string
+	expected Version
+	err      error
+}{
+	{"HTTP/1.0 ", HTTP_1_0, nil},
+	{"HTTP/1.0", HTTP_1_0, nil},
+}
+
+func TestReadVersion(t *testing.T) {
+	for _, tt := range readVersionTests {
+		c := &Conn{reader: b(tt.line)}
+		actual, err := c.ReadVersion()
+		if actual != tt.expected || err != tt.err {
+			t.Errorf("ReadVersion(%q): expected %v %v, got %v %v", tt.line, tt.expected, tt.err, actual, err)
+		}
+	}
+}
+
 var readStatusLineTests = []struct {
 	line    string
 	version string
@@ -181,6 +200,7 @@ var readStatusLineTests = []struct {
 	{"HTTP/1.1 200 OK\r\n\r\n", "HTTP/1.1", 200, "OK", nil},
 	{"HTTP/1.1 200 OK", "", 0, "", io.EOF},
 	{"HTTP/1.0 200", "", 0, "", io.EOF},
+	{"HTTP/1.0", "", 0, "", io.EOF},
 }
 
 func TestReadStatusLine(t *testing.T) {
@@ -289,8 +309,10 @@ var readLineTests = []struct {
 }{
 	{"200 OK\r\n", "200 OK\r\n", nil},
 	{"200 OK\n", "200 OK\n", nil},
-	{"200 OK", "200 OK", io.EOF},
 	{"200 OK\r\n\r\n", "200 OK\r\n", nil},
+	{"200 OK", "200 OK", io.EOF},
+	{"200 ", "200 ", io.EOF},
+	{"200", "200", io.EOF},
 }
 
 func TestReadLine(t *testing.T) {
