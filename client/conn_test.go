@@ -176,7 +176,8 @@ var readVersionTests = []struct {
 	err      error
 }{
 	{"HTTP/1.0 ", HTTP_1_0, nil},
-	{"HTTP/1.0", HTTP_1_0, nil},
+	{"HTTP/1.0", Version{}, io.EOF},
+	// {"http/1.1", Version{}, fmt.Errorf("ReadVersion: expected %q, got %q at position %v", 'H', 'h', 0)},
 }
 
 func TestReadVersion(t *testing.T) {

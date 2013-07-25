@@ -94,21 +94,58 @@ func (c *Conn) WriteBody(r io.Reader) error {
 	return err
 }
 
-var invalidVersion Version
-
 // ReadVersion reads a HTTP version string from the wire.
 func (c *Conn) ReadVersion() (Version, error) {
-	var version string
-	_, err := fmt.Fscanf(c.reader, "%s ", &version)
-	switch version {
-	case "HTTP/0.9":
-		return Version{0, 9}, nil
-	case "HTTP/1.0":
-		return Version{1, 0}, nil
-	case "HTTP/1.1":
-		return Version{1, 1}, nil
+	var major, minor int
+	for pos := 0; pos < len("HTTP/x.x "); pos++ {
+		c, err := c.reader.ReadByte()
+		if err != nil {
+			return invalidVersion, err
+		}
+		switch pos {
+		case 0:
+			if c != 'H' {
+				return readVersionErr(pos, 'H', c)
+			}
+		case 1, 2:
+			if c != 'T' {
+				return readVersionErr(pos, 'T', c)
+			}
+		case 3:
+			if c != 'P' {
+				return readVersionErr(pos, 'P', c)
+			}
+		case 4:
+			if c != '/' {
+				return readVersionErr(pos, '/', c)
+			}
+		case 5:
+			switch c {
+			case '0', '1', '2', '3', '4', '5', '6', '7', '8', '9':
+				major = int(int(c) - 0x30)
+			}
+		case 6:
+			if c != '.' {
+				return readVersionErr(pos, '.', c)
+			}
+		case 7:
+			switch c {
+			case '0', '1', '2', '3', '4', '5', '6', '7', '8', '9':
+				minor = int(int(c) - 0x30)
+			}
+		case 8:
+			if c != ' ' {
+				return readVersionErr(pos, ' ', c)
+			}
+		}
 	}
-	return invalidVersion, err
+	return Version{major, minor}, nil
+}
+
+var invalidVersion Version
+
+func readVersionErr(pos int, expected, got byte) (Version, error) {
+	return invalidVersion, fmt.Errorf("ReadVersion: expected %q, got %q at position %v", expected, got, pos)
 }
 
 // ReadStatusLine reads the status line.
