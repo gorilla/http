@@ -121,10 +121,8 @@ func (c *client) ReadResponse() (*Response, error) {
 		headers = append(headers, Header{key, value})
 	}
 	var resp = Response{
-		StatusLine: StatusLine{
-			Version: version,
-			Status:  Status{code, msg},
-		},
+		Version: version,
+		Status:  Status{code, msg},
 		Headers: headers,
 		Body:    c.ReadBody(),
 	}
@@ -144,18 +142,10 @@ func (r *RequestLine) String() string {
 	return fmt.Sprintf("%s %s %s", r.Method, r.Path, r.Version.String())
 }
 
-type StatusLine struct {
-	Version
-	Status
-}
-
-func (s *StatusLine) String() string {
-	return fmt.Sprintf("%s %s", s.Version.String(), s.Status.String())
-}
-
 // Response represents an RFC2616 response.
 type Response struct {
-	StatusLine
+	Version
+	Status
 	Headers []Header
 	Body    io.Reader
 }

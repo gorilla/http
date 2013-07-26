@@ -66,8 +66,6 @@ func TestClientSendRequest(t *testing.T) {
 	}
 }
 
-func sl(v Version, code int, msg string) StatusLine { return StatusLine{v, Status{code, msg}} }
-
 var readResponseTests = []struct {
 	data string
 	*Response
@@ -75,37 +73,44 @@ var readResponseTests = []struct {
 }{
 	{"HTTP/1.0 200 OK\r\n\r\n",
 		&Response{
-			StatusLine: sl(HTTP_1_0, 200, "OK"),
+			Version: HTTP_1_0,
+			Status:  Status{200, "OK"},
 		},
 		nil},
 	{"HTTP/1.0 200 OK\r\n",
 		&Response{
-			StatusLine: sl(HTTP_1_0, 200, "OK"),
+			Version: HTTP_1_0,
+			Status:  Status{200, "OK"},
 		},
 		io.EOF},
 	{"HTTP/1.1 404 Not found\r\n\r\n",
 		&Response{
-			StatusLine: sl(HTTP_1_1, 404, "Not found"),
+			Version: HTTP_1_1,
+			Status:  Status{404, "Not found"},
 		},
 		nil},
 	{"HTTP/1.1 404 Not found\r\n",
 		&Response{
-			StatusLine: sl(HTTP_1_1, 404, "Not found"),
+			Version: HTTP_1_1,
+			Status:  Status{404, "Not found"},
 		}, io.EOF},
 	{"HTTP/1.0 200 OK\r\nHost: localhost\r\n\r\n",
 		&Response{
-			StatusLine: sl(HTTP_1_0, 200, "OK"),
-			Headers:    []Header{{"Host", "localhost"}},
+			Version: HTTP_1_0,
+			Status:  Status{200, "OK"},
+			Headers: []Header{{"Host", "localhost"}},
 		}, nil},
 	{"HTTP/1.1 200 OK\r\nHost: localhost\r\n",
 		&Response{
-			StatusLine: sl(HTTP_1_1, 200, "OK"),
-			Headers:    []Header{{"Host", "localhost"}},
+			Version: HTTP_1_1,
+			Status:  Status{200, "OK"},
+			Headers: []Header{{"Host", "localhost"}},
 		}, io.EOF},
 	{"HTTP/1.0 200 OK\r\nHost: localhost\r\nConnection : close\r\n",
 		&Response{
-			StatusLine: sl(HTTP_1_0, 200, "OK"),
-			Headers:    []Header{{"Host", "localhost"}, {"Connection", "close"}},
+			Version: HTTP_1_0,
+			Status:  Status{200, "OK"},
+			Headers: []Header{{"Host", "localhost"}, {"Connection", "close"}},
 		}, io.EOF},
 }
 
@@ -113,8 +118,8 @@ func TestClientReadResponse(t *testing.T) {
 	for _, tt := range readResponseTests {
 		client := &client{reader: reader{b(tt.data)}}
 		resp, err := client.ReadResponse()
-		if resp.StatusLine != tt.Response.StatusLine {
-			t.Errorf("client.ReadResponse(%q): expected %q, got %q", tt.data, resp.StatusLine, tt.Response.StatusLine)
+		if resp.Version != tt.Response.Version || resp.Status != tt.Response.Status {
+			t.Errorf("client.ReadResponse(%q): expected %q %q, got %q %q", tt.data, tt.Response.Version, tt.Response.Status, resp.Version, resp.Status)
 			continue
 		}
 		if !reflect.DeepEqual(tt.Response.Headers, resp.Headers) || err != tt.err {
@@ -232,21 +237,6 @@ func TestRequestLineString(t *testing.T) {
 	for _, tt := range requestLineStringTests {
 		if actual := tt.RequestLine.String(); actual != tt.expected {
 			t.Errorf("RequestLine{%q %q, %q}.String(): expected %q, got %q", tt.RequestLine.Method, tt.RequestLine.Path, tt.RequestLine.Version, tt.expected, actual)
-		}
-	}
-}
-
-var statusLineStringTests = []struct {
-	StatusLine
-	expected string
-}{
-	{StatusLine{HTTP_1_0, Status{200, "OK"}}, "HTTP/1.0 200 OK"},
-}
-
-func TestStatusLineString(t *testing.T) {
-	for _, tt := range statusLineStringTests {
-		if actual := tt.StatusLine.String(); actual != tt.expected {
-			t.Errorf("StatusLine(%q, %q).String(): expected %q, got %q", tt.StatusLine.Version, tt.StatusLine.Status.String(), tt.expected, actual)
 		}
 	}
 }
