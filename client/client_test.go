@@ -12,6 +12,10 @@ import (
 // assert that client.client implements client.Client
 var _ Client = new(client)
 
+// assert that client.Request and client.Response implement client.Message
+// var _ Message = new(Request)
+var _ Message = new(Response)
+
 func TestNewClient(t *testing.T) {
 	var b bytes.Buffer
 	var r io.ReadWriter = &b

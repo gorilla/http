@@ -92,7 +92,7 @@ func (c *client) SendRequest(req *Request) error {
 
 // Status represents an HTTP status code.
 type Status struct {
-	Code    int
+	Code   int
 	Reason string
 }
 
@@ -173,4 +173,10 @@ func (r *Response) CloseRequested() bool {
 		}
 	}
 	return false
+}
+
+// Message represents common traits of both Requests and Responses.
+type Message interface {
+	ContentLength() int64
+	CloseRequested() bool
 }
