@@ -46,18 +46,25 @@ func TestInternalHttpServer(t *testing.T) {
 	newServer(t, nil).Shutdown()
 }
 
+var a string
+
+func init() {
+	for i := 0; i < 1024; i++ {
+		a += "aaaaaaaa"
+	}
+}
+
 var getTests = []struct {
 	path     string
 	expected string
 	err      error
 }{
 	{"/200", "OK", nil},
+	//	{"/a", a, nil},
 }
 
 func TestGet(t *testing.T) {
-	mux := http.NewServeMux()
-	mux.HandleFunc("/200", func(w http.ResponseWriter, _ *http.Request) { w.Write([]byte("OK")) })
-	s := newServer(t, mux)
+	s := newServer(t, stdmux())
 	defer s.Shutdown()
 	for _, tt := range getTests {
 		url := s.Root() + tt.path

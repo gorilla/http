@@ -195,6 +195,31 @@ func TestRequestCloseRequested(t *testing.T) {
 	}
 }
 
+var transferEncodingTests = []struct {
+	data     string
+	expected string
+}{
+	{"HTTP/1.0 200 OK\r\n\r\nfoo", "identity"},
+	{"HTTP/1.0 200 OK\r\nConnection: close\r\n\r\nfoo", "identity"},
+	{"HTTP/1.0 200 OK\r\nConnection: close\r\nTransfer-Encoding: chunked\r\n\r\nfoo", "chunked"},
+	{"HTTP/1.1 200 OK\r\n\r\nfoo", "identity"},
+	{"HTTP/1.1 200 OK\r\nConnection: close\r\n\r\nfoo", "identity"},
+	{"HTTP/1.1 200 OK\r\nConnection: close\r\nTransfer-Encoding: chunked\r\n\r\nfoo", "chunked"},
+}
+
+func TestTransferEncoding(t *testing.T) {
+	for _, tt := range transferEncodingTests {
+		client := &client{reader: reader{b(tt.data)}}
+		resp, err := client.ReadResponse()
+		if err != nil {
+			t.Fatal(err)
+		}
+		if actual := resp.TransferEncoding(); actual != tt.expected {
+			t.Errorf("ReadResponse(%q): TransferEncoding: expected %d got %d", tt.data, tt.expected, actual)
+		}
+	}
+}
+
 var statusStringTests = []struct {
 	Status
 	expected string

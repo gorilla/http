@@ -14,6 +14,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"net/http/httputil"
 	"strconv"
 	"strings"
 )
@@ -128,6 +129,8 @@ func (c *client) ReadResponse() (*Response, error) {
 	}
 	if l := resp.ContentLength(); l >= 0 {
 		resp.Body = io.LimitReader(resp.Body, l)
+	} else if resp.TransferEncoding() == "chunked" {
+		resp.Body = httputil.NewChunkedReader(resp.Body)
 	}
 	return &resp, err
 }
@@ -173,6 +176,20 @@ func (r *Response) CloseRequested() bool {
 		}
 	}
 	return false
+}
+
+// TransferEncoding returns the transfer encoding this message was transmitted with.
+// If not is specified by the sender, "identity" is assumed.
+func (r *Response) TransferEncoding() string {
+	for _, h := range r.Headers {
+		if strings.EqualFold(h.Key, "Transfer-Encoding") {
+			switch h.Value {
+			case "identity", "chunked":
+				return h.Value
+			}
+		}
+	}
+	return "identity"
 }
 
 // Message represents common traits of both Requests and Responses.

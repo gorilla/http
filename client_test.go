@@ -3,6 +3,7 @@ package http
 import (
 	"io"
 	"net/http"
+	"strings"
 	"testing"
 
 	"github.com/gorilla/http/client"
@@ -27,12 +28,26 @@ var clientDoTests = []struct {
 		path:   "/404",
 		Status: client.Status{404, "Not Found"},
 	},
+	{method: "GET",
+		path:   "/a",
+		Status: client.Status{200, "OK"},
+		rbody:  strings.NewReader("a"),
+	},
+}
+
+func stdmux() *http.ServeMux {
+	mux := http.NewServeMux()
+	mux.HandleFunc("/200", func(w http.ResponseWriter, _ *http.Request) { w.Write([]byte("OK")) })
+	mux.HandleFunc("/a", func(w http.ResponseWriter, _ *http.Request) {
+		for i := 0; i < 1024; i++ {
+			w.Write([]byte("aaaaaaaa"))
+		}
+	})
+	return mux
 }
 
 func TestClientDo(t *testing.T) {
-	mux := http.NewServeMux()
-	mux.HandleFunc("/200", func(w http.ResponseWriter, _ *http.Request) { w.Write([]byte("OK")) })
-	s := newServer(t, mux)
+	s := newServer(t, stdmux())
 	defer s.Shutdown()
 	for _, tt := range clientDoTests {
 		var c Client
@@ -44,13 +59,12 @@ func TestClientDo(t *testing.T) {
 		if status != tt.Status {
 			t.Errorf("Client.Do(%q, %q, %v, %v): status expected %v, got %v", tt.method, tt.path, tt.headers, tt.body, tt.Status, status)
 		}
+
 	}
 }
 
 func TestDefaultClientDo(t *testing.T) {
-	mux := http.NewServeMux()
-	mux.HandleFunc("/200", func(w http.ResponseWriter, _ *http.Request) { w.Write([]byte("OK")) })
-	s := newServer(t, mux)
+	s := newServer(t, stdmux())
 	defer s.Shutdown()
 	for _, tt := range clientDoTests {
 		url := s.Root() + tt.path
@@ -83,9 +97,7 @@ var clientGetTests = []struct {
 }
 
 func TestClientGet(t *testing.T) {
-	mux := http.NewServeMux()
-	mux.HandleFunc("/200", func(w http.ResponseWriter, _ *http.Request) { w.Write([]byte("OK")) })
-	s := newServer(t, mux)
+	s := newServer(t, stdmux())
 	defer s.Shutdown()
 	for _, tt := range clientGetTests {
 		var c Client
