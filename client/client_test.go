@@ -202,7 +202,7 @@ var statusStringTests = []struct {
 func TestStatusString(t *testing.T) {
 	for _, tt := range statusStringTests {
 		if actual := tt.Status.String(); actual != tt.expected {
-			t.Errorf("Status{%d, %q}.String(): expected %q, got %q", tt.Status.Code, tt.Status.Message, tt.expected, actual)
+			t.Errorf("Status{%d, %q}.String(): expected %q, got %q", tt.Status.Code, tt.Status.Reason, tt.expected, actual)
 		}
 	}
 }

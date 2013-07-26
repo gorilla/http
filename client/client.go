@@ -93,10 +93,10 @@ func (c *client) SendRequest(req *Request) error {
 // Status represents an HTTP status code.
 type Status struct {
 	Code    int
-	Message string
+	Reason string
 }
 
-func (s Status) String() string { return fmt.Sprintf("%d %s", s.Code, s.Message) }
+func (s Status) String() string { return fmt.Sprintf("%d %s", s.Code, s.Reason) }
 
 var invalidStatus Status
 
@@ -165,7 +165,7 @@ func (r *Response) ContentLength() int64 {
 	return -1
 }
 
-// CloseRequested returns if Message includes a Connection: close header.
+// CloseRequested returns if Reason includes a Connection: close header.
 func (r *Response) CloseRequested() bool {
 	for _, h := range r.Headers {
 		if strings.EqualFold(h.Key, "Connection") {
