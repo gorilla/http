@@ -218,9 +218,9 @@ var readStatusLineTests = []struct {
 	msg     string
 	err     error
 }{
+	{"HTTP/1.0 200 OK", "HTTP/1.0", 200, "OK", nil},
 	{"HTTP/1.0 200 OK\r\n", "HTTP/1.0", 200, "OK", nil},
 	{"HTTP/1.1 200 OK\r\n\r\n", "HTTP/1.1", 200, "OK", nil},
-	{"HTTP/1.1 200 OK", "", 0, "", io.EOF},
 	{"HTTP/1.0 200", "", 0, "", io.EOF},
 	{"HTTP/1.0", "", 0, "", io.EOF},
 }

@@ -180,19 +180,16 @@ func (c *Conn) ReadStatusCode() (int, error) {
 
 // ReadStatusLine reads the status line.
 func (c *Conn) ReadStatusLine() (string, int, string, error) {
-	line, err := c.readLine()
+	version, err := c.ReadVersion()
 	if err != nil {
 		return "", 0, "", err
 	}
-	reader := bytes.NewReader(line)
-	var version string
-	var code int
-	if _, err := fmt.Fscanf(reader, "%s %d ", &version, &code); err != nil {
+	code, err := c.ReadStatusCode()
+	if err != nil {
 		return "", 0, "", err
 	}
-	s := bufio.NewScanner(reader)
-	s.Scan()
-	return version, code, s.Text(), s.Err()
+	msg, _, err := c.reader.ReadLine()
+	return version.String(), code, string(msg), err
 }
 
 // ReadHeader reads a http header.
