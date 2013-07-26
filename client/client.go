@@ -1,8 +1,8 @@
 // Package gorilla/http/client contains the lower level HTTP client implementation.
 //
 // Package client is divided into two layers. The upper layer is the client.Client layer
-// which handles the vaguaries of http implementations. The lower layer, client.Conn is
-// concerned with encoding and decoding the HTTP data stream on the wire.
+// which handles the vaguaries of http implementations. The lower layer, two types, reader
+// and writer are concerned with encoding and decoding the HTTP data stream on the wire.
 //
 // The interface presented by client.Client is very powerful. It is not expected that normal
 // consumers of HTTP services will need to operate at this level and should instead user the
