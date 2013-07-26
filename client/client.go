@@ -14,6 +14,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"strconv"
 )
 
 // Version represents a HTTP version.
@@ -152,4 +153,15 @@ type Response struct {
 	StatusLine
 	Headers []Header
 	Body    io.Reader
+}
+
+// ContentLength returns the length of the body. If the body length is not known
+// ContentLength will return -1.
+func (r *Response) ContentLength() int {
+	// need findheader
+	len, err := strconv.Atoi("-1")
+	if err != nil {
+		return -1
+	}
+	return len
 }

@@ -109,6 +109,26 @@ var readResponseTests = []struct {
 		}, io.EOF},
 }
 
+var responseContentLengthTests = []struct {
+	data     string
+	expected int
+}{
+	{"HTTP/1.0 200 OK\r\n\r\n", -1},
+}
+
+func TestResponseContentLength(t *testing.T) {
+	for _, tt := range responseContentLengthTests {
+		client := &client{reader: reader{b(tt.data)}}
+		resp, err := client.ReadResponse()
+		if err != nil {
+			t.Fatal(err)
+		}
+		if actual := resp.ContentLength(); actual != tt.expected {
+			t.Errorf("ReadResponse(%q): ContentLength: expected %d got %d", tt.data, tt.expected, actual)
+		}
+	}
+}
+
 func TestClientReadResponse(t *testing.T) {
 	for _, tt := range readResponseTests {
 		client := &client{reader: reader{b(tt.data)}}
