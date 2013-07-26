@@ -212,25 +212,25 @@ func TestReadStatusCode(t *testing.T) {
 }
 
 var readStatusLineTests = []struct {
-	line    string
-	version string
-	code    int
-	msg     string
-	err     error
+	line string
+	Version
+	code int
+	msg  string
+	err  error
 }{
-	{"HTTP/1.0 200 OK", "HTTP/1.0", 200, "OK", nil},
-	{"HTTP/1.0 200 OK\r\n", "HTTP/1.0", 200, "OK", nil},
-	{"HTTP/1.1 200 OK\r\n\r\n", "HTTP/1.1", 200, "OK", nil},
-	{"HTTP/1.0 200", "", 0, "", io.EOF},
-	{"HTTP/1.0", "", 0, "", io.EOF},
+	{"HTTP/1.0 200 OK", HTTP_1_0, 200, "OK", nil},
+	{"HTTP/1.0 200 OK\r\n", HTTP_1_0, 200, "OK", nil},
+	{"HTTP/1.1 200 OK\r\n\r\n", HTTP_1_1, 200, "OK", nil},
+	{"HTTP/1.0 200", Version{}, 0, "", io.EOF},
+	{"HTTP/1.0", Version{}, 0, "", io.EOF},
 }
 
 func TestReadStatusLine(t *testing.T) {
 	for _, tt := range readStatusLineTests {
 		c := &Conn{reader: b(tt.line)}
 		version, code, msg, err := c.ReadStatusLine()
-		if version != tt.version || code != tt.code || msg != tt.msg || err != tt.err {
-			t.Errorf("ReadStatusLine(%q): expected %q %d %q %v, got %q %d %q %v", tt.line, tt.version, tt.code, tt.msg, tt.err, version, code, msg, err)
+		if version != tt.Version || code != tt.code || msg != tt.msg || err != tt.err {
+			t.Errorf("ReadStatusLine(%q): expected %q %d %q %v, got %q %d %q %v", tt.line, tt.Version, tt.code, tt.msg, tt.err, version, code, msg, err)
 		}
 	}
 }

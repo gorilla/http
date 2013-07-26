@@ -179,17 +179,17 @@ func (c *Conn) ReadStatusCode() (int, error) {
 }
 
 // ReadStatusLine reads the status line.
-func (c *Conn) ReadStatusLine() (string, int, string, error) {
+func (c *Conn) ReadStatusLine() (Version, int, string, error) {
 	version, err := c.ReadVersion()
 	if err != nil {
-		return "", 0, "", err
+		return Version{}, 0, "", err
 	}
 	code, err := c.ReadStatusCode()
 	if err != nil {
-		return "", 0, "", err
+		return Version{}, 0, "", err
 	}
 	msg, _, err := c.reader.ReadLine()
-	return version.String(), code, string(msg), err
+	return version, code, string(msg), err
 }
 
 // ReadHeader reads a http header.
