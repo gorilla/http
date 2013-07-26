@@ -2,6 +2,7 @@ package client
 
 import (
 	"bytes"
+	"errors"
 	"io"
 	"testing"
 )
@@ -13,14 +14,19 @@ var readVersionTests = []struct {
 }{
 	{"HTTP/1.0 ", HTTP_1_0, nil},
 	{"HTTP/1.0", Version{}, io.EOF},
-	// {"http/1.1", Version{}, fmt.Errorf("ReadVersion: expected %q, got %q at position %v", 'H', 'h', 0)},
+	{"http/1.1", Version{}, errors.New("ReadVersion: expected 'H', got 'h' at position 0")},
+	{"Http/1.1", Version{}, errors.New("ReadVersion: expected 'T', got 't' at position 1")},
+	{"HTTp/1.1", Version{}, errors.New("ReadVersion: expected 'P', got 'p' at position 3")},
+	{"HTTP#1.1", Version{}, errors.New("ReadVersion: expected '/', got '#' at position 4")},
+	{"HTTP/11", Version{}, errors.New("ReadVersion: expected '.', got '1' at position 6")},
+	{"HTTP/1.10", Version{}, errors.New("ReadVersion: expected ' ', got '0' at position 8")},
 }
 
 func TestReadVersion(t *testing.T) {
 	for _, tt := range readVersionTests {
 		c := &reader{b(tt.line)}
 		actual, err := c.ReadVersion()
-		if actual != tt.expected || err != tt.err {
+		if actual != tt.expected || !sameErr(err, tt.err) {
 			t.Errorf("ReadVersion(%q): expected %v %v, got %v %v", tt.line, tt.expected, tt.err, actual, err)
 		}
 	}
@@ -35,16 +41,25 @@ var readStatusCodeTests = []struct {
 	{"200 OK", 200, nil},
 	{"200 ", 200, nil},
 	{"200", 0, io.EOF},
+	{"20 ", 0, io.EOF},
+	{"2000", 0, errors.New("ReadStatusCode: expected ' ', got '0' at position 3")},
 }
 
 func TestReadStatusCode(t *testing.T) {
 	for _, tt := range readStatusCodeTests {
 		c := &reader{b(tt.line)}
 		actual, err := c.ReadStatusCode()
-		if actual != tt.expected || err != tt.err {
+		if actual != tt.expected || !sameErr(err, tt.err) {
 			t.Errorf("ReadVersion(%q): expected %v %v, got %v %v", tt.line, tt.expected, tt.err, actual, err)
 		}
 	}
+}
+
+func sameErr(a, b error) bool {
+	if a != nil && b != nil {
+		return a.Error() == b.Error()
+	}
+	return a == b
 }
 
 var readStatusLineTests = []struct {
