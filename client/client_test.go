@@ -163,6 +163,29 @@ func TestResponseContentLength(t *testing.T) {
 	}
 }
 
+var closeRequestedTests = []struct {
+	data     string
+	expected bool
+}{
+	{"HTTP/1.0 200 OK\r\n\r\nfoo", false},
+	{"HTTP/1.0 200 OK\r\nConnection: close\r\n\r\nfoo", true},
+	{"HTTP/1.1 200 OK\r\n\r\nfoo", false},
+	{"HTTP/1.1 200 OK\r\nConnection: close\r\n\r\nfoo", true},
+}
+
+func TestRequestCloseRequested(t *testing.T) {
+	for _, tt := range closeRequestedTests {
+		client := &client{reader: reader{b(tt.data)}}
+		resp, err := client.ReadResponse()
+		if err != nil {
+			t.Fatal(err)
+		}
+		if actual := resp.CloseRequested(); actual != tt.expected {
+			t.Errorf("ReadResponse(%q): CloseRequested: expected %d got %d", tt.data, tt.expected, actual)
+		}
+	}
+}
+
 var statusStringTests = []struct {
 	Status
 	expected string

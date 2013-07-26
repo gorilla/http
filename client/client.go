@@ -174,3 +174,13 @@ func (r *Response) ContentLength() int64 {
 	}
 	return -1
 }
+
+// CloseRequested returns if Message includes a Connection: close header.
+func (r *Response) CloseRequested() bool {
+	for _, h := range r.Headers {
+		if strings.EqualFold(h.Key, "Connection") {
+			return h.Value == "close"
+		}
+	}
+	return false
+}
