@@ -28,7 +28,7 @@ At one level this is admirable, HTTP messages; requests and responses, are more 
 makes good engineering sense to reuse their logic where possible. However, combined with the Go 1 contract, this has
 lead to compromises.
 
-gorilla/http is a Client implementation only, which allows us to focus on a set of layered types which encapsulate the
+`gorilla/http` is a Client implementation only, which allows us to focus on a set of layered types which encapsulate the
 complete request flow from the client point of view without compromise.
 
 # Specific featues
@@ -48,10 +48,10 @@ client which does not require the respones body to be closed, however this appea
 the idea of connection reuse and pooling.
 
 Instead `gorilla/http` will address this in two ways
-1. The high level functions in the `gorilla/http` package do not return types that require closing, for example,
+ 1. The high level functions in the `gorilla/http` package do not return types that require closing, for example,
 `gorilla/http.Get(url string)` will return a `[]byte` and an `error`. The `[]byte` contains the entire response
 body. This should be sufficient for many REST style http calls which exchange small messages.
-2. A the `http.Client` layer, methods will return `an io.ReadCloser`, not a complex `Response` type. This
+ 2. A the `http.Client` layer, methods will return `an io.ReadCloser`, not a complex `Response` type. This
 `io.ReadCloser` *must* be closed before falling out of scope otherwise the client will panic the application.
 
 ## Connection rate limiting
