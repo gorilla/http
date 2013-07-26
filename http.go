@@ -6,8 +6,21 @@
 // For lower level http implementations, see gorilla/http/client.
 package http
 
-// Default is the default http Client used by this package.
+import (
+//"io/ioutil"
+)
+
+// DefaultClient is the default http Client used by this package.
 // It's defaults are expected to represent the best practice
 // at the time, but may change over time. If you need more
 // control or reliablity, you should construct your own client.
-var Default = &Client{}
+var DefaultClient Client
+
+// Get issues a GET request using the DefaultClient returning the body of the response, if any.
+func Get(url string) ([]byte, error) {
+	_, _, _, err := DefaultClient.Get(url, nil)
+	if err != nil {
+		return nil, err
+	}
+	return nil, nil // ioutil.ReadAll(r)
+}

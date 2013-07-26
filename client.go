@@ -1,11 +1,11 @@
 package http
 
 import (
-	"net"
-	"net/url"
-	"strings"
-
 	"github.com/gorilla/http/client"
+	"io"
+	"net"
+	stdurl "net/url"
+	"strings"
 )
 
 // Client implements a high level HTTP client. Client methods can be called concurrently
@@ -15,31 +15,37 @@ import (
 type Client struct {
 }
 
-type Headers struct{}
-
-func (c *Client) Get(u string) error {
-	url, err := url.Parse(u)
+// Do sends an HTTP request and returns an HTTP response.
+func (c *Client) Do(method, url string, headers map[string][]string, body io.Reader) (client.Status, map[string][]string, io.Reader, error) {
+	u, err := stdurl.Parse(url)
 	if err != nil {
-		return err
+		return client.Status{}, nil, nil, err
 	}
-	host := url.Host
+	host := u.Host
 	if !strings.Contains(host, ":") {
 		host += ":80"
 	}
 	conn, err := net.Dial("tcp", host)
 	if err != nil {
-		return err
+		return client.Status{}, nil, nil, err
 	}
-	var req client.Request
 	c1 := client.NewClient(conn)
-	if err := c1.SendRequest(&req); err != nil {
-		return err
+	req := client.Request{
+		Method:  method,
+		URI:     u.Path,
+		Version: client.HTTP_1_1,
 	}
-	_, err = c1.ReadResponse()
-	return err
+	if err := c1.SendRequest(&req); err != nil {
+		return client.Status{}, nil, nil, err
+	}
+	resp, err := c1.ReadResponse()
+	if err != nil {
+		return client.Status{}, nil, nil, err
+	}
+	return resp.Status, nil, resp.Body, nil
 }
 
-type rc struct{}
-
-func (r *rc) Read([]byte) (int, error) { return 0, nil }
-func (r *rc) Close() error             { return nil }
+// Get sends a GET request
+func (c *Client) Get(url string, headers map[string][]string) (client.Status, map[string][]string, io.Reader, error) {
+	return c.Do("GET", url, headers, nil)
+}
