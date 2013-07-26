@@ -84,7 +84,7 @@ var readResponseTests = []struct {
 
 func TestClientReadResponse(t *testing.T) {
 	for _, tt := range readResponseTests {
-		client := &client{Conn: &Conn{reader: reader{b(tt.data)}}}
+		client := &client{reader: reader{b(tt.data)}}
 		status, headers, body, err := client.ReadResponse()
 		if status != tt.Status {
 			t.Errorf("client.ReadResponse(%q): expected %q, got %q", tt.data, tt.Status, status)

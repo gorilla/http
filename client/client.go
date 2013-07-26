@@ -10,6 +10,7 @@
 package client
 
 import (
+	"bufio"
 	"errors"
 	"fmt"
 	"io"
@@ -44,6 +45,8 @@ type Request struct {
 	Body io.Reader
 }
 
+const readerBuffer = 4096
+
 // Client represents a single connection to a http server. Client obeys KeepAlive conditions for
 // HTTP but connection pooling is expected to be handled at a higher layer.
 type Client interface {
@@ -54,12 +57,14 @@ type Client interface {
 // NewClient returns a Client implementation which uses rw to communicate.
 func NewClient(rw io.ReadWriter) Client {
 	return &client{
-		Conn: newConn(rw),
+		reader: reader{bufio.NewReaderSize(rw, readerBuffer)},
+		writer: writer{Writer: rw},
 	}
 }
 
 type client struct {
-	*Conn
+	reader
+	writer
 }
 
 // SendRequest marshalls a HTTP request to the wire.

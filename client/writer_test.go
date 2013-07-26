@@ -25,7 +25,7 @@ func TestPhaseString(t *testing.T) {
 }
 
 func TestPhaseError(t *testing.T) {
-	var c Conn
+	var c writer
 	err := c.WriteHeader("Host", "localhost")
 	if _, ok := err.(*phaseError); !ok {
 		t.Fatalf("expected %T, got %v", new(phaseError), err)
@@ -46,7 +46,7 @@ var writeRequestLineTests = []struct {
 func TestWriteRequestLine(t *testing.T) {
 	for _, tt := range writeRequestLineTests {
 		var b bytes.Buffer
-		c := newConn(&b)
+		c := &writer{Writer: &b}
 		if err := c.WriteRequestLine(tt.method, tt.uri, tt.version); err != nil {
 			t.Fatalf("Conn.WriteRequestLine(%q, %q, %q): %v", tt.method, tt.uri, tt.version, err)
 		}
@@ -58,7 +58,7 @@ func TestWriteRequestLine(t *testing.T) {
 
 func TestDoubleRequestLine(t *testing.T) {
 	var b bytes.Buffer
-	c := newConn(&b)
+	c := &writer{Writer: &b}
 	if err := c.WriteRequestLine("GET", "/hello", "HTTP/0.9"); err != nil {
 		t.Fatal(err)
 	}
@@ -79,7 +79,7 @@ var writeHeaderTests = []struct {
 func TestWriteHeader(t *testing.T) {
 	for _, tt := range writeHeaderTests {
 		var b bytes.Buffer
-		c := newConn(&b)
+		c := &writer{Writer: &b}
 		c.StartHeaders()
 		if err := c.WriteHeader(tt.key, tt.value); err != nil {
 			t.Fatalf("Conn.WriteHeader(%q, %q): %v", tt.key, tt.value, err)
@@ -92,7 +92,7 @@ func TestWriteHeader(t *testing.T) {
 
 func TestStartBody(t *testing.T) {
 	var b bytes.Buffer
-	c := newConn(&b)
+	c := &writer{Writer: &b}
 	c.StartHeaders()
 	if err := c.WriteHeader("Host", "localhost"); err != nil {
 		t.Fatal(err)
@@ -113,7 +113,7 @@ func TestStartBody(t *testing.T) {
 }
 
 func TestDoubleWriteBody(t *testing.T) {
-	c := newConn(new(bytes.Buffer))
+	c := &writer{Writer: new(bytes.Buffer)}
 	c.StartBody()
 	if err := c.WriteBody(b("")); err != nil {
 		t.Fatal(err)
@@ -140,7 +140,7 @@ var writeTests = []writeTest{
 }
 
 // test only method, real call will come from Client.
-func (c *Conn) Write(t *testing.T, w writeTest) {
+func (c *writer) write(t *testing.T, w writeTest) {
 	c.StartHeaders()
 	for _, h := range w.headers {
 		if err := c.WriteHeader(h.key, h.value); err != nil {
@@ -156,8 +156,8 @@ func (c *Conn) Write(t *testing.T, w writeTest) {
 func TestWrite(t *testing.T) {
 	for _, tt := range writeTests {
 		var b bytes.Buffer
-		c := newConn(&b)
-		c.Write(t, tt)
+		c := &writer{Writer: &b}
+		c.write(t, tt)
 		if actual := b.String(); actual != tt.expected {
 			t.Errorf("TestWrite: expected %q, got %q", tt.expected, actual)
 		}
