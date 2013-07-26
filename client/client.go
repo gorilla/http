@@ -51,7 +51,7 @@ const readerBuffer = 4096
 // HTTP but connection pooling is expected to be handled at a higher layer.
 type Client interface {
 	SendRequest(*Request) error
-	ReadResponse() (Status, []Header, io.Reader, error)
+	ReadResponse() (*Response, error)
 }
 
 // NewClient returns a Client implementation which uses rw to communicate.
@@ -99,13 +99,12 @@ func (s Status) String() string { return fmt.Sprintf("%d %s", s.Code, s.Message)
 var invalidStatus Status
 
 // ReadResponse unmarshalls a HTTP response.
-func (c *client) ReadResponse() (Status, []Header, io.Reader, error) {
-	_, code, msg, err := c.ReadStatusLine()
+func (c *client) ReadResponse() (*Response, error) {
+	version, code, msg, err := c.ReadStatusLine()
 	var headers []Header
 	if err != nil {
-		return invalidStatus, headers, nil, fmt.Errorf("ReadStatusLine: %v", err)
+		return nil, fmt.Errorf("ReadStatusLine: %v", err)
 	}
-	status := Status{code, msg}
 	for {
 		var key, value string
 		var done bool
@@ -119,7 +118,14 @@ func (c *client) ReadResponse() (Status, []Header, io.Reader, error) {
 		}
 		headers = append(headers, Header{key, value})
 	}
-	return status, headers, c.ReadBody(), err
+	return &Response{
+		StatusLine: StatusLine{
+			Version: version,
+			Status:  Status{code, msg},
+		},
+		Headers: headers,
+		Body:    c.ReadBody(),
+	}, err
 }
 
 type RequestLine struct {
@@ -139,4 +145,11 @@ type StatusLine struct {
 
 func (s *StatusLine) String() string {
 	return fmt.Sprintf("%s %s", s.Version.String(), s.Status.String())
+}
+
+// Response represents an RFC2616 response.
+type Response struct {
+	StatusLine
+	Headers []Header
+	Body    io.Reader
 }

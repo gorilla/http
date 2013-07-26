@@ -35,7 +35,7 @@ func (c *Client) Get(u string) error {
 	if err := c1.SendRequest(&req); err != nil {
 		return err
 	}
-	_, _, _, err = c1.ReadResponse()
+	_, err = c1.ReadResponse()
 	return err
 }
 

@@ -66,41 +66,75 @@ func TestClientSendRequest(t *testing.T) {
 	}
 }
 
+func sl(v Version, code int, msg string) StatusLine { return StatusLine{v, Status{code, msg}} }
+
 var readResponseTests = []struct {
 	data string
-	Status
-	headers []Header
-	body    string
-	err     error
+	*Response
+	err error
 }{
-	{"HTTP/1.0 200 OK\r\n\r\n", Status{200, "OK"}, nil, "", nil},
-	{"HTTP/1.0 200 OK\r\n", Status{200, "OK"}, nil, "", io.EOF},
-	{"HTTP/1.1 404 Not found\r\n\r\n", Status{404, "Not found"}, nil, "", nil},
-	{"HTTP/1.1 404 Not found\r\n", Status{404, "Not found"}, nil, "", io.EOF},
-	{"HTTP/1.0 200 OK\r\nHost: localhost\r\n\r\n", Status{200, "OK"}, []Header{{"Host", "localhost"}}, "", nil},
-	{"HTTP/1.1 200 OK\r\nHost: localhost\r\n", Status{200, "OK"}, []Header{{"Host", "localhost"}}, "", io.EOF},
-	{"HTTP/1.0 200 OK\r\nHost: localhost\r\nConnection : close\r\n", Status{200, "OK"}, []Header{{"Host", "localhost"}, {"Connection", "close"}}, "", io.EOF},
+	{"HTTP/1.0 200 OK\r\n\r\n",
+		&Response{
+			StatusLine: sl(HTTP_1_0, 200, "OK"),
+		},
+		nil},
+	{"HTTP/1.0 200 OK\r\n",
+		&Response{
+			StatusLine: sl(HTTP_1_0, 200, "OK"),
+		},
+		io.EOF},
+	{"HTTP/1.1 404 Not found\r\n\r\n",
+		&Response{
+			StatusLine: sl(HTTP_1_1, 404, "Not found"),
+		},
+		nil},
+	{"HTTP/1.1 404 Not found\r\n",
+		&Response{
+			StatusLine: sl(HTTP_1_1, 404, "Not found"),
+		}, io.EOF},
+	{"HTTP/1.0 200 OK\r\nHost: localhost\r\n\r\n",
+		&Response{
+			StatusLine: sl(HTTP_1_0, 200, "OK"),
+			Headers:    []Header{{"Host", "localhost"}},
+		}, nil},
+	{"HTTP/1.1 200 OK\r\nHost: localhost\r\n",
+		&Response{
+			StatusLine: sl(HTTP_1_1, 200, "OK"),
+			Headers:    []Header{{"Host", "localhost"}},
+		}, io.EOF},
+	{"HTTP/1.0 200 OK\r\nHost: localhost\r\nConnection : close\r\n",
+		&Response{
+			StatusLine: sl(HTTP_1_0, 200, "OK"),
+			Headers:    []Header{{"Host", "localhost"}, {"Connection", "close"}},
+		}, io.EOF},
 }
 
 func TestClientReadResponse(t *testing.T) {
 	for _, tt := range readResponseTests {
 		client := &client{reader: reader{b(tt.data)}}
-		status, headers, body, err := client.ReadResponse()
-		if status != tt.Status {
-			t.Errorf("client.ReadResponse(%q): expected %q, got %q", tt.data, tt.Status, status)
-			t.Error(err)
+		resp, err := client.ReadResponse()
+		if resp.StatusLine != tt.Response.StatusLine {
+			t.Errorf("client.ReadResponse(%q): expected %q, got %q", tt.data, resp.StatusLine, tt.Response.StatusLine)
 			continue
 		}
-		if !reflect.DeepEqual(tt.headers, headers) || err != tt.err {
-			t.Errorf("client.ReadResponse(%q): expected %v %v, got %v %v", tt.data, tt.headers, tt.err, headers, err)
+		if !reflect.DeepEqual(tt.Response.Headers, resp.Headers) || err != tt.err {
+			t.Errorf("client.ReadResponse(%q): expected %v %v, got %v %v", tt.data, tt.Response.Headers, tt.err, resp.Headers, err)
 		}
 		if err != nil {
 			continue
 		}
 		var buf bytes.Buffer
-		_, err = io.Copy(&buf, body)
-		if actual := buf.String(); actual != tt.body || err != tt.err {
-			t.Errorf("client.ReadResponse(%q): expected %q %v, got %q %v", tt.data, tt.body, tt.err, actual, err)
+		var expected, actual string
+		if tt.Response.Body != nil {
+			_, err = io.Copy(&buf, tt.Response.Body)
+			expected = buf.String()
+		}
+		if resp.Body != nil {
+			_, err = io.Copy(&buf, resp.Body)
+			actual = buf.String()
+		}
+		if actual != expected || err != tt.err {
+			t.Errorf("client.ReadResponse(%q): expected %q %v, got %q %v", tt.data, expected, tt.err, actual, err)
 		}
 	}
 }
