@@ -18,7 +18,7 @@ var readVersionTests = []struct {
 
 func TestReadVersion(t *testing.T) {
 	for _, tt := range readVersionTests {
-		c := &Conn{reader: b(tt.line)}
+		c := &reader{b(tt.line)}
 		actual, err := c.ReadVersion()
 		if actual != tt.expected || err != tt.err {
 			t.Errorf("ReadVersion(%q): expected %v %v, got %v %v", tt.line, tt.expected, tt.err, actual, err)
@@ -39,7 +39,7 @@ var readStatusCodeTests = []struct {
 
 func TestReadStatusCode(t *testing.T) {
 	for _, tt := range readStatusCodeTests {
-		c := &Conn{reader: b(tt.line)}
+		c := &reader{b(tt.line)}
 		actual, err := c.ReadStatusCode()
 		if actual != tt.expected || err != tt.err {
 			t.Errorf("ReadVersion(%q): expected %v %v, got %v %v", tt.line, tt.expected, tt.err, actual, err)
@@ -63,7 +63,7 @@ var readStatusLineTests = []struct {
 
 func TestReadStatusLine(t *testing.T) {
 	for _, tt := range readStatusLineTests {
-		c := &Conn{reader: b(tt.line)}
+		c := &reader{b(tt.line)}
 		version, code, msg, err := c.ReadStatusLine()
 		if version != tt.Version || code != tt.code || msg != tt.msg || err != tt.err {
 			t.Errorf("ReadStatusLine(%q): expected %q %d %q %v, got %q %d %q %v", tt.line, tt.Version, tt.code, tt.msg, tt.err, version, code, msg, err)
@@ -86,7 +86,7 @@ var readHeaderTests = []struct {
 
 func TestReadHeader(t *testing.T) {
 	for _, tt := range readHeaderTests {
-		c := &Conn{reader: b(tt.header)}
+		c := &reader{b(tt.header)}
 		key, value, done, err := c.ReadHeader()
 		if err != nil {
 			t.Fatalf("ReadHeader(%q): %v", tt.header, err)
@@ -115,7 +115,7 @@ var readHeadersTests = []struct {
 func TestReadHeaders(t *testing.T) {
 NEXT:
 	for _, tt := range readHeadersTests {
-		c := &Conn{reader: b(tt.headers)}
+		c := &reader{b(tt.headers)}
 		for i, done := 0, false; !done; i++ {
 			var key, value string
 			var err error
@@ -150,7 +150,7 @@ var readBodyTests = []struct {
 // disabled til I know what ReadBody should look like
 func testReadBody(t *testing.T) {
 	for _, tt := range readBodyTests {
-		c := &Conn{reader: b(tt.body)}
+		c := &reader{b(tt.body)}
 		r := c.ReadBody()
 		var buf bytes.Buffer
 		_, err := io.Copy(&buf, r)
@@ -175,7 +175,7 @@ var readLineTests = []struct {
 
 func TestReadLine(t *testing.T) {
 	for _, tt := range readLineTests {
-		c := &Conn{reader: b(tt.line)}
+		c := &reader{b(tt.line)}
 		actual, err := c.readLine()
 		if actual := string(actual); actual != tt.expected || err != tt.err {
 			t.Errorf("readLine(%q): expected %q %v, got %q, %v", tt.line, tt.expected, tt.err, actual, err)

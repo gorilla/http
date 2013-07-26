@@ -1,17 +1,22 @@
 package client
 
 import (
+	"bufio"
 	"bytes"
 	"errors"
 	"fmt"
 	"io"
 )
 
+type reader struct {
+	*bufio.Reader
+}
+
 // ReadVersion reads a HTTP version string from the wire.
-func (c *Conn) ReadVersion() (Version, error) {
+func (r *reader) ReadVersion() (Version, error) {
 	var major, minor int
 	for pos := 0; pos < len("HTTP/x.x "); pos++ {
-		c, err := c.reader.ReadByte()
+		c, err := r.ReadByte()
 		if err != nil {
 			return invalidVersion, err
 		}
@@ -62,10 +67,10 @@ func readVersionErr(pos int, expected, got byte) (Version, error) {
 }
 
 // ReadStatusCode reads the HTTP status code from the wire.
-func (c *Conn) ReadStatusCode() (int, error) {
+func (r *reader) ReadStatusCode() (int, error) {
 	var code int
 	for pos := 0; pos < len("200 "); pos++ {
-		c, err := c.reader.ReadByte()
+		c, err := r.ReadByte()
 		if err != nil {
 			return 0, err
 		}
@@ -92,22 +97,22 @@ func (c *Conn) ReadStatusCode() (int, error) {
 }
 
 // ReadStatusLine reads the status line.
-func (c *Conn) ReadStatusLine() (Version, int, string, error) {
-	version, err := c.ReadVersion()
+func (r *reader) ReadStatusLine() (Version, int, string, error) {
+	version, err := r.ReadVersion()
 	if err != nil {
 		return Version{}, 0, "", err
 	}
-	code, err := c.ReadStatusCode()
+	code, err := r.ReadStatusCode()
 	if err != nil {
 		return Version{}, 0, "", err
 	}
-	msg, _, err := c.reader.ReadLine()
+	msg, _, err := r.ReadLine()
 	return version, code, string(msg), err
 }
 
 // ReadHeader reads a http header.
-func (c *Conn) ReadHeader() (string, string, bool, error) {
-	line, err := c.readLine()
+func (r *reader) ReadHeader() (string, string, bool, error) {
+	line, err := r.readLine()
 	if err != nil {
 		return "", "", false, err
 	}
@@ -121,11 +126,11 @@ func (c *Conn) ReadHeader() (string, string, bool, error) {
 	return string(bytes.TrimSpace(v[0])), string(bytes.TrimSpace(v[1])), false, nil
 }
 
-func (c *Conn) ReadBody() io.Reader {
-	return c.reader
+func (r *reader) ReadBody() io.Reader {
+	return r
 }
 
 // readLine returns a []byte terminated by a \r\n.
-func (c *Conn) readLine() ([]byte, error) {
-	return c.reader.ReadBytes('\n')
+func (r *reader) readLine() ([]byte, error) {
+	return r.ReadBytes('\n')
 }

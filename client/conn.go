@@ -9,8 +9,8 @@ import (
 // and decoding HTTP messages on the wire.
 type Conn struct {
 	phase
-	writer io.Writer
-	reader *bufio.Reader
+	writer
+	reader
 }
 
 const readerBuffer = 4096
@@ -18,7 +18,7 @@ const readerBuffer = 4096
 // newConn returns a new *Conn
 func newConn(rw io.ReadWriter) *Conn {
 	return &Conn{
-		reader: bufio.NewReaderSize(rw, readerBuffer),
-		writer: rw,
+		reader: reader{bufio.NewReaderSize(rw, readerBuffer)},
+		writer: writer{Writer: rw},
 	}
 }
