@@ -15,6 +15,7 @@ import (
 	"fmt"
 	"io"
 	"strconv"
+	"strings"
 )
 
 // Version represents a HTTP version.
@@ -119,14 +120,18 @@ func (c *client) ReadResponse() (*Response, error) {
 		}
 		headers = append(headers, Header{key, value})
 	}
-	return &Response{
+	var resp = Response{
 		StatusLine: StatusLine{
 			Version: version,
 			Status:  Status{code, msg},
 		},
 		Headers: headers,
 		Body:    c.ReadBody(),
-	}, err
+	}
+	if l := resp.ContentLength(); l >= 0 {
+		resp.Body = io.LimitReader(resp.Body, l)
+	}
+	return &resp, err
 }
 
 type RequestLine struct {
@@ -157,11 +162,15 @@ type Response struct {
 
 // ContentLength returns the length of the body. If the body length is not known
 // ContentLength will return -1.
-func (r *Response) ContentLength() int {
-	// need findheader
-	len, err := strconv.Atoi("-1")
-	if err != nil {
-		return -1
+func (r *Response) ContentLength() int64 {
+	for _, h := range r.Headers {
+		if strings.EqualFold(h.Key, "Content-Length") {
+			length, err := strconv.Atoi(h.Value)
+			if err != nil {
+				continue
+			}
+			return int64(length)
+		}
 	}
-	return len
+	return -1
 }

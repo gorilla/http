@@ -109,26 +109,6 @@ var readResponseTests = []struct {
 		}, io.EOF},
 }
 
-var responseContentLengthTests = []struct {
-	data     string
-	expected int
-}{
-	{"HTTP/1.0 200 OK\r\n\r\n", -1},
-}
-
-func TestResponseContentLength(t *testing.T) {
-	for _, tt := range responseContentLengthTests {
-		client := &client{reader: reader{b(tt.data)}}
-		resp, err := client.ReadResponse()
-		if err != nil {
-			t.Fatal(err)
-		}
-		if actual := resp.ContentLength(); actual != tt.expected {
-			t.Errorf("ReadResponse(%q): ContentLength: expected %d got %d", tt.data, tt.expected, actual)
-		}
-	}
-}
-
 func TestClientReadResponse(t *testing.T) {
 	for _, tt := range readResponseTests {
 		client := &client{reader: reader{b(tt.data)}}
@@ -155,6 +135,29 @@ func TestClientReadResponse(t *testing.T) {
 		}
 		if actual != expected || err != tt.err {
 			t.Errorf("client.ReadResponse(%q): expected %q %v, got %q %v", tt.data, expected, tt.err, actual, err)
+		}
+	}
+}
+
+var responseContentLengthTests = []struct {
+	data     string
+	expected int64
+}{
+	{"HTTP/1.0 200 OK\r\n\r\n", -1},
+	{"HTTP/1.0 200 OK\r\n\r\n ", -1},
+	{"HTTP/1.0 200 OK\r\nContent-Length: 1\r\n\r\n ", 1},
+	{"HTTP/1.0 200 OK\r\nContent-Length: 0\r\n\r\n", 0},
+}
+
+func TestResponseContentLength(t *testing.T) {
+	for _, tt := range responseContentLengthTests {
+		client := &client{reader: reader{b(tt.data)}}
+		resp, err := client.ReadResponse()
+		if err != nil {
+			t.Fatal(err)
+		}
+		if actual := resp.ContentLength(); actual != tt.expected {
+			t.Errorf("ReadResponse(%q): ContentLength: expected %d got %d", tt.data, tt.expected, actual)
 		}
 	}
 }
