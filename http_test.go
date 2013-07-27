@@ -1,6 +1,7 @@
 package http
 
 import (
+	"bytes"
 	"fmt"
 	"net"
 	"net/http"
@@ -60,7 +61,7 @@ var getTests = []struct {
 	err      error
 }{
 	{"/200", "OK", nil},
-	//	{"/a", a, nil},
+	// {"/a", a, nil},	// triggers chunked encoding
 }
 
 func TestGet(t *testing.T) {
@@ -68,8 +69,9 @@ func TestGet(t *testing.T) {
 	defer s.Shutdown()
 	for _, tt := range getTests {
 		url := s.Root() + tt.path
-		actual, err := Get(url)
-		if actual := string(actual); actual != tt.expected || err != tt.err {
+		var b bytes.Buffer
+		n, err := Get(&b, url)
+		if actual := b.String(); actual != tt.expected || n != int64(len(tt.expected)) || err != tt.err {
 			t.Errorf("Get(%q): expected %q %v, got %q %v", tt.path, tt.expected, tt.err, actual, err)
 		}
 	}

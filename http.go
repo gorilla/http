@@ -7,7 +7,7 @@
 package http
 
 import (
-	"io/ioutil"
+	"io"
 )
 
 // DefaultClient is the default http Client used by this package.
@@ -16,11 +16,13 @@ import (
 // control or reliablity, you should construct your own client.
 var DefaultClient Client
 
-// Get issues a GET request using the DefaultClient returning the body of the response, if any.
-func Get(url string) ([]byte, error) {
+// Get issues a GET request using the DefaultClient and writes the result to
+// to w if successful.
+func Get(w io.Writer, url string) (int64, error) {
 	_, _, r, err := DefaultClient.Get(url, nil)
 	if err != nil {
-		return nil, err
+		return 0, err
 	}
-	return ioutil.ReadAll(r)
+	// defer r.Close()
+	return io.Copy(w, r)
 }
