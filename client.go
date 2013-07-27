@@ -17,13 +17,21 @@ type Client struct {
 
 // Do sends an HTTP request and returns an HTTP response.
 func (c *Client) Do(method, url string, headers map[string][]string, body io.Reader) (client.Status, map[string][]string, io.ReadCloser, error) {
+	if headers == nil {
+		headers = make(map[string][]string)
+	}
 	u, err := stdurl.Parse(url)
 	if err != nil {
 		return client.Status{}, nil, nil, err
 	}
 	host := u.Host
+	headers["Host"] = []string{host}
 	if !strings.Contains(host, ":") {
 		host += ":80"
+	}
+	path := u.Path
+	if path == "" {
+		path = "/"
 	}
 	conn, err := c.dialer.Dial("tcp", host)
 	if err != nil {
@@ -31,8 +39,9 @@ func (c *Client) Do(method, url string, headers map[string][]string, body io.Rea
 	}
 	req := client.Request{
 		Method:  method,
-		URI:     u.Path,
+		URI:     path,
 		Version: client.HTTP_1_1,
+		Headers: toHeaders(headers),
 	}
 	if err := conn.WriteRequest(&req); err != nil {
 		return client.Status{}, nil, nil, err
@@ -52,4 +61,14 @@ type readCloser struct {
 // Get sends a GET request
 func (c *Client) Get(url string, headers map[string][]string) (client.Status, map[string][]string, io.ReadCloser, error) {
 	return c.Do("GET", url, headers, nil)
+}
+
+func toHeaders(h map[string][]string) []client.Header {
+	var r []client.Header
+	for k, v := range h {
+		for _, v := range v {
+			r = append(r, client.Header{k, v})
+		}
+	}
+	return r
 }
