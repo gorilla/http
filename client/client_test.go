@@ -61,7 +61,7 @@ func TestClientSendRequest(t *testing.T) {
 	for _, tt := range sendRequestTests {
 		var b bytes.Buffer
 		client := NewClient(&b)
-		if err := client.SendRequest(&tt.Request); err != nil {
+		if err := client.WriteRequest(&tt.Request); err != nil {
 			t.Fatalf("client.SendRequest(): %v", err)
 		}
 		if actual := b.String(); actual != tt.expected {

@@ -53,7 +53,7 @@ const readerBuffer = 4096
 // Client represents a single connection to a http server. Client obeys KeepAlive conditions for
 // HTTP but connection pooling is expected to be handled at a higher layer.
 type Client interface {
-	SendRequest(*Request) error
+	WriteRequest(*Request) error
 	ReadResponse() (*Response, error)
 }
 
@@ -71,7 +71,7 @@ type client struct {
 }
 
 // SendRequest marshalls a HTTP request to the wire.
-func (c *client) SendRequest(req *Request) error {
+func (c *client) WriteRequest(req *Request) error {
 	if err := c.WriteRequestLine(req.Method, req.URI, req.Version.String()); err != nil {
 		return err
 	}

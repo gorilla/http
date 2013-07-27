@@ -35,7 +35,7 @@ func (c *Client) Do(method, url string, headers map[string][]string, body io.Rea
 		URI:     u.Path,
 		Version: client.HTTP_1_1,
 	}
-	if err := c1.SendRequest(&req); err != nil {
+	if err := c1.WriteRequest(&req); err != nil {
 		return client.Status{}, nil, nil, err
 	}
 	resp, err := c1.ReadResponse()
