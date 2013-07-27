@@ -90,24 +90,24 @@ var readHeaderTests = []struct {
 	header     string
 	key, value string
 	done       bool
+	err        error
 }{
-	{"Host: localhost\r\n", "Host", "localhost", false},
-	{"Host: localhost\r\n\r\n", "Host", "localhost", false},
-	{"Connection:close\r\n", "Connection", "close", false},
-	{"Connection:close\r\n\r\n", "Connection", "close", false},
-	{"Vary : gzip\r\n", "Vary", "gzip", false},
-	{"\r\n", "", "", true},
+	{"Host: localhost\r\n", "Host", "localhost", false, nil},
+	{"Host localhost\r\n", "", "", false, errors.New("invalid header line")},
+	{"Host: localhost", "", "", false, io.EOF},
+	{"Host: localhost\r\n\r\n", "Host", "localhost", false, nil},
+	{"Connection:close\r\n", "Connection", "close", false, nil},
+	{"Connection:close\r\n\r\n", "Connection", "close", false, nil},
+	{"Vary : gzip\r\n", "Vary", "gzip", false, nil},
+	{"\r\n", "", "", true, nil},
 }
 
 func TestReadHeader(t *testing.T) {
 	for _, tt := range readHeaderTests {
 		c := &reader{b(tt.header)}
 		key, value, done, err := c.ReadHeader()
-		if err != nil {
-			t.Fatalf("ReadHeader(%q): %v", tt.header, err)
-		}
-		if key != tt.key || value != tt.value || done != tt.done {
-			t.Errorf("ReadHeader: expected %q %q %v, got %q %q %v", tt.key, tt.value, tt.done, key, value, done)
+		if key != tt.key || value != tt.value || done != tt.done || !sameErr(err, tt.err) {
+			t.Errorf("ReadHeader: expected %q %q %v %v, got %q %q %v %v", tt.key, tt.value, tt.done, tt.err, key, value, done, err)
 		}
 	}
 }
