@@ -50,7 +50,7 @@ func TestClientDo(t *testing.T) {
 	s := newServer(t, stdmux())
 	defer s.Shutdown()
 	for _, tt := range clientDoTests {
-		var c Client
+		c := &Client{new(dialer)}
 		url := s.Root() + tt.path
 		status, _, _, err := c.Do(tt.method, url, tt.headers, tt.body)
 		if err != tt.err {
@@ -100,7 +100,7 @@ func TestClientGet(t *testing.T) {
 	s := newServer(t, stdmux())
 	defer s.Shutdown()
 	for _, tt := range clientGetTests {
-		var c Client
+		c := &Client{new(dialer)}
 		url := s.Root() + tt.path
 		status, _, _, err := c.Get(url, tt.headers)
 		if err != tt.err {
