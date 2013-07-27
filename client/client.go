@@ -158,7 +158,7 @@ type Response struct {
 func (r *Response) ContentLength() int64 {
 	for _, h := range r.Headers {
 		if strings.EqualFold(h.Key, "Content-Length") {
-			length, err := strconv.Atoi(h.Value)
+			length, err := strconv.ParseInt(h.Value, 10, 64)
 			if err != nil {
 				continue
 			}
