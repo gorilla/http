@@ -157,6 +157,7 @@ var responseContentLengthTests = []struct {
 	{"HTTP/1.0 200 OK\r\nContent-Length: 1\r\n\r\n ", 1},
 	{"HTTP/1.0 200 OK\r\nContent-Length: 0\r\n\r\n", 0},
 	{"HTTP/1.0 200 OK\r\nContent-Length: 4294967296\r\n\r\n", 4294967296},
+	{"HTTP/1.0 200 OK\r\nContent-Length: seven\r\n\r\n", -1},
 }
 
 func TestResponseContentLength(t *testing.T) {
