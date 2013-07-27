@@ -135,16 +135,6 @@ func (c *client) ReadResponse() (*Response, error) {
 	return &resp, err
 }
 
-type RequestLine struct {
-	Method string
-	Path   string
-	Version
-}
-
-func (r *RequestLine) String() string {
-	return fmt.Sprintf("%s %s %s", r.Method, r.Path, r.Version.String())
-}
-
 // Response represents an RFC2616 response.
 type Response struct {
 	Version
