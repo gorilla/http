@@ -37,21 +37,25 @@ func TestPhaseError(t *testing.T) {
 }
 
 var writeRequestLineTests = []struct {
-	method, uri, version string
-	expected             string
+	method, path, version string
+	query                 []string
+	expected              string
 }{
-	{"GET", "/foo", "HTTP/1.0", "GET /foo HTTP/1.0\r\n"},
+	{method: "GET", path: "/foo", version: "HTTP/1.0", expected: "GET /foo HTTP/1.0\r\n"},
+	{method: "GET", path: "/foo", query: []string{}, version: "HTTP/1.0", expected: "GET /foo HTTP/1.0\r\n"},
+	{method: "GET", path: "/foo", query: []string{"hello=foo"}, version: "HTTP/1.0", expected: "GET /foo?hello=foo HTTP/1.0\r\n"},
+	{method: "GET", path: "/foo", query: []string{"hello=foo", "bar=quux"}, version: "HTTP/1.0", expected: "GET /foo?hello=foo&bar=quux HTTP/1.0\r\n"},
 }
 
 func TestWriteRequestLine(t *testing.T) {
 	for _, tt := range writeRequestLineTests {
 		var b bytes.Buffer
 		c := &writer{Writer: &b}
-		if err := c.WriteRequestLine(tt.method, tt.uri, tt.version); err != nil {
-			t.Fatalf("Conn.WriteRequestLine(%q, %q, %q): %v", tt.method, tt.uri, tt.version, err)
+		if err := c.WriteRequestLine(tt.method, tt.path, tt.query, tt.version); err != nil {
+			t.Fatalf("Conn.WriteRequestLine(%q, %q, %v %q): %v", tt.method, tt.path, tt.query, tt.version, err)
 		}
 		if actual := b.String(); actual != tt.expected {
-			t.Errorf("Conn.WriteRequestLine(%q, %q, %q): expected %q, got %q", tt.method, tt.uri, tt.version, tt.expected, actual)
+			t.Errorf("Conn.WriteRequestLine(%q, %q, %v, %q): expected %q, got %q", tt.method, tt.path, tt.query, tt.version, tt.expected, actual)
 		}
 	}
 }
@@ -59,10 +63,10 @@ func TestWriteRequestLine(t *testing.T) {
 func TestDoubleRequestLine(t *testing.T) {
 	var b bytes.Buffer
 	c := &writer{Writer: &b}
-	if err := c.WriteRequestLine("GET", "/hello", "HTTP/0.9"); err != nil {
+	if err := c.WriteRequestLine("GET", "/hello", nil, "HTTP/0.9"); err != nil {
 		t.Fatal(err)
 	}
-	err := c.WriteRequestLine("GET", "/hello", "HTTP/0.9")
+	err := c.WriteRequestLine("GET", "/hello", nil, "HTTP/0.9")
 	expected := `phase error: expected requestline, got headers`
 	if actual := err.Error(); actual != expected {
 		t.Fatalf("phaseError.Error(): expected %q, got %q", expected, actual)

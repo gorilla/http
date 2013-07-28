@@ -3,6 +3,7 @@ package client
 import (
 	"fmt"
 	"io"
+	"strings"
 )
 
 type phase int
@@ -43,11 +44,15 @@ type writer struct {
 func (w *writer) StartHeaders() { w.phase = headers }
 
 // WriteRequestLine writes the RequestLine and moves the Conn to the headers phase
-func (w *writer) WriteRequestLine(method, uri, version string) error {
+func (w *writer) WriteRequestLine(method, path string, query []string, version string) error {
 	if w.phase != requestline {
 		return &phaseError{requestline, w.phase}
 	}
-	_, err := fmt.Fprintf(w, "%s %s %s\r\n", method, uri, version)
+	q := strings.Join(query, "&")
+	if len(q) > 0 {
+		q = "?" + q
+	}
+	_, err := fmt.Fprintf(w, "%s %s%s %s\r\n", method, path, q, version)
 	w.StartHeaders()
 	return err
 }
