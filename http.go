@@ -17,12 +17,16 @@ import (
 var DefaultClient = Client{dialer: &dialer{}}
 
 // Get issues a GET request using the DefaultClient and writes the result to
-// to w if successful.
+// to w if successful. If the status code of the response is no a success
+// no data will be written and the status code will be returned as an error.
 func Get(w io.Writer, url string) (int64, error) {
-	_, _, r, err := DefaultClient.Get(url, nil)
+	status, _, r, err := DefaultClient.Get(url, nil)
 	if err != nil {
 		return 0, err
 	}
 	defer r.Close()
+	if !status.IsSuccess() {
+		return 0, &StatusError{status}
+	}
 	return io.Copy(w, r)
 }

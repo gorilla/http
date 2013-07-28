@@ -53,6 +53,15 @@ func (c *Client) Do(method, url string, headers map[string][]string, body io.Rea
 	return resp.Status, nil, &readCloser{resp.Body, conn}, nil
 }
 
+// StatusError reprents a client.Status as an error.
+type StatusError struct {
+	client.Status
+}
+
+func (s *StatusError) Error() string {
+	return s.Status.String()
+}
+
 type readCloser struct {
 	io.Reader
 	io.Closer

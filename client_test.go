@@ -111,3 +111,20 @@ func TestClientGet(t *testing.T) {
 		}
 	}
 }
+
+// assert that StatusError is an error.
+var _ error = new(StatusError)
+
+var statusErrorTests = []struct {
+	client.Status
+	err error
+}{}
+
+func TestStatusError(t *testing.T) {
+	for _, tt := range statusErrorTests {
+		err := &StatusError{tt.Status}
+		if !sameErr(err, tt.err) {
+			t.Errorf("StatusError{%q}: expected %v, got %v", tt.Status, tt.err, err)
+		}
+	}
+}
