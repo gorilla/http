@@ -41,7 +41,7 @@ type Header struct {
 type Request struct {
 	Method string
 	Path   string
-	Query	[]string
+	Query  []string
 	Version
 
 	Headers []Header

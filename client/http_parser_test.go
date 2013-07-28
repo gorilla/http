@@ -79,14 +79,36 @@ var requestTests = []struct {
 	{
 		name: "fragment in uri",
 		Request: Request{
-			Method: "GET",
-			Path: "/forums/1/topics/2375",
-  			Query: []string{"page=1"},
+			Method:  "GET",
+			Path:    "/forums/1/topics/2375",
+			Query:   []string{"page=1"},
 			Version: HTTP_1_1,
 		},
 		// modified, sending a fragment sounds wrong.
-		expected :"GET /forums/1/topics/2375?page=1 HTTP/1.1\r\n"+
-         		"\r\n",
+		expected: "GET /forums/1/topics/2375?page=1 HTTP/1.1\r\n" +
+			"\r\n",
+	},
+	{
+		name: "get no headers no body",
+		Request: Request{
+			Method:  "GET",
+			Path:    "/get_no_headers_no_body/world",
+			Version: HTTP_1_1,
+		},
+		expected: "GET /get_no_headers_no_body/world HTTP/1.1\r\n" +
+			"\r\n",
+	},
+	{
+		name: "get one header no body",
+		Request: Request{
+			Method:  "GET",
+			Path:    "/get_one_header_no_body",
+			Version: HTTP_1_1,
+			Headers: []Header{{"Accept", "*/*"}},
+		},
+		expected: "GET /get_one_header_no_body HTTP/1.1\r\n" +
+			"Accept: */*\r\n" +
+			"\r\n",
 	},
 }
 
