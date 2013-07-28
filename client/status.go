@@ -65,9 +65,9 @@ var invalidStatus Status
 
 func (s Status) String() string { return fmt.Sprintf("%d %s", s.Code, s.Reason) }
 
-func (s Status) Informational() bool { return s.Code >= INFO_CONTINUE && s.Code < SUCCESS_OK }
-func (s Status) Success() bool       { return s.Code >= SUCCESS_OK && s.Code < REDIRECTION_MULTIPLE_CHOICES }
-func (s Status) Redirect() bool {
+func (s Status) IsInformational() bool { return s.Code >= INFO_CONTINUE && s.Code < SUCCESS_OK }
+func (s Status) IsSuccess() bool       { return s.Code >= SUCCESS_OK && s.Code < REDIRECTION_MULTIPLE_CHOICES }
+func (s Status) IsRedirect() bool {
 	return s.Code >= REDIRECTION_MULTIPLE_CHOICES && s.Code < CLIENT_ERROR_BAD_REQUEST
 }
 func (s Status) IsError() bool { return s.Code >= CLIENT_ERROR_BAD_REQUEST }

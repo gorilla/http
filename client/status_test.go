@@ -29,13 +29,13 @@ var statusMethodTests = []struct {
 
 func TestStatusMethods(t *testing.T) {
 	for _, tt := range statusMethodTests {
-		if info := tt.Status.Informational(); info != tt.informational {
+		if info := tt.Status.IsInformational(); info != tt.informational {
 			t.Errorf("Status(%q).Informational: expected %v, got %v", tt.Status, tt.informational, info)
 		}
-		if success := tt.Status.Success(); success != tt.success {
+		if success := tt.Status.IsSuccess(); success != tt.success {
 			t.Errorf("Status(%q).Success: expected %v, got %v", tt.Status, tt.success, success)
 		}
-		if redirect := tt.Status.Redirect(); redirect != tt.redirect {
+		if redirect := tt.Status.IsRedirect(); redirect != tt.redirect {
 			t.Errorf("Status(%q).Redirect: expected %v, got %v", tt.Status, tt.redirect, redirect)
 		}
 		if error := tt.Status.IsError(); error != tt.error {
