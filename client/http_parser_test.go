@@ -6,6 +6,7 @@ package client
 
 import (
 	"bytes"
+	"strings"
 	"testing"
 )
 
@@ -109,6 +110,20 @@ var requestTests = []struct {
 		expected: "GET /get_one_header_no_body HTTP/1.1\r\n" +
 			"Accept: */*\r\n" +
 			"\r\n",
+	},
+	{
+		name: "get funky content length body hello",
+		Request: Request{
+			Method:  "GET",
+			Path:    "/get_funky_content_length_body_hello",
+			Version: HTTP_1_0,
+			Headers: []Header{{"conTENT-Length", "5"}},
+			Body:    strings.NewReader("HELLO"),
+		},
+		expected: "GET /get_funky_content_length_body_hello HTTP/1.0\r\n" +
+			"conTENT-Length: 5\r\n" +
+			"\r\n" +
+			"HELLO",
 	},
 }
 
