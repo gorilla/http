@@ -2,6 +2,8 @@ package client
 
 import (
 	"bytes"
+	"io"
+	"strings"
 	"testing"
 )
 
@@ -164,6 +166,48 @@ func TestWrite(t *testing.T) {
 		c.write(t, tt)
 		if actual := b.String(); actual != tt.expected {
 			t.Errorf("TestWrite: expected %q, got %q", tt.expected, actual)
+		}
+	}
+}
+
+var writeBodyTests = []struct {
+	io.Reader
+	expected string
+}{
+	{strings.NewReader(""), ""},
+	{strings.NewReader("hello world"), "hello world"},
+}
+
+func TestWriteBody(t *testing.T) {
+	for _, tt := range writeBodyTests {
+		var b bytes.Buffer
+		w := &writer{Writer: &b, phase: body}
+		if err := w.WriteBody(tt.Reader); err != nil {
+			t.Fatal(err)
+		}
+		if actual := b.String(); actual != tt.expected {
+			t.Errorf("WriteBody: expected %q, got %q", tt.expected, actual)
+		}
+	}
+}
+
+var writeChunkedTests = []struct {
+	io.Reader
+	expected string
+}{
+	{strings.NewReader(""), "0\r\n"},
+	{strings.NewReader("all your base are belong to us"), "1e\r\nall your base are belong to us\r\n0\r\n"},
+}
+
+func TestWriteChunked(t *testing.T) {
+	for _, tt := range writeChunkedTests {
+		var b bytes.Buffer
+		w := &writer{Writer: &b, phase: body}
+		if err := w.WriteChunked(tt.Reader); err != nil {
+			t.Fatal(err)
+		}
+		if actual := b.String(); actual != tt.expected {
+			t.Errorf("WriteBody: expected %q, got %q", tt.expected, actual)
 		}
 	}
 }

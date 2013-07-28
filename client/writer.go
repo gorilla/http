@@ -3,6 +3,7 @@ package client
 import (
 	"fmt"
 	"io"
+	"net/http/httputil"
 	"strings"
 )
 
@@ -73,7 +74,7 @@ func (w *writer) StartBody() error {
 	return err
 }
 
-// Write body writer the buffer on the wire.
+// WriteBody writes the contents of r to the wire.
 func (w *writer) WriteBody(r io.Reader) error {
 	if w.phase != body {
 		return &phaseError{body, w.phase}
@@ -81,4 +82,17 @@ func (w *writer) WriteBody(r io.Reader) error {
 	_, err := io.Copy(w, r)
 	w.phase = requestline
 	return err
+}
+
+// WriteChunked writes the contents of r in chunked format to the wire.
+func (w *writer) WriteChunked(r io.Reader) error {
+	if w.phase != body {
+		return &phaseError{body, w.phase}
+	}
+	cw := httputil.NewChunkedWriter(w)
+	if _, err := io.Copy(cw, r); err != nil {
+		return nil
+	}
+	w.phase = requestline
+	return cw.Close()
 }
