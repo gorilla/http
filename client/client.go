@@ -40,7 +40,7 @@ type Header struct {
 // Request represents a complete HTTP request.
 type Request struct {
 	Method string
-	URI    string
+	Path   string
 	Version
 
 	Headers []Header
@@ -72,7 +72,7 @@ type client struct {
 
 // SendRequest marshalls a HTTP request to the wire.
 func (c *client) WriteRequest(req *Request) error {
-	if err := c.WriteRequestLine(req.Method, req.URI, req.Version.String()); err != nil {
+	if err := c.WriteRequestLine(req.Method, req.Path, req.Version.String()); err != nil {
 		return err
 	}
 	for _, h := range req.Headers {

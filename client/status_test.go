@@ -24,11 +24,11 @@ var statusMethodTests = []struct {
 	Status
 	informational, success, redirect, error, clienterr, servererr bool
 }{
-	{Status{Code: INFO_CONTINUE }, true, false, false, false, false, false},
-	{Status{Code: SUCCESS_OK }, false, true, false, false, false, false},
-	{Status{Code: REDIRECTION_MULTIPLE_CHOICES }, false, false, true, false, false, false},
-	{Status{Code: CLIENT_ERROR_BAD_REQUEST }, false, false, false, true, true, false},
-	{Status{Code: SERVER_ERROR_INTERNAL }, false, false, false, true, false, true},
+	{Status{Code: INFO_CONTINUE}, true, false, false, false, false, false},
+	{Status{Code: SUCCESS_OK}, false, true, false, false, false, false},
+	{Status{Code: REDIRECTION_MULTIPLE_CHOICES}, false, false, true, false, false, false},
+	{Status{Code: CLIENT_ERROR_BAD_REQUEST}, false, false, false, true, true, false},
+	{Status{Code: SERVER_ERROR_INTERNAL}, false, false, false, true, false, true},
 }
 
 func TestStatusMethods(t *testing.T) {

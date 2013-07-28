@@ -39,7 +39,7 @@ func (c *Client) Do(method, url string, headers map[string][]string, body io.Rea
 	}
 	req := client.Request{
 		Method:  method,
-		URI:     path,
+		Path:     path,
 		Version: client.HTTP_1_1,
 		Headers: toHeaders(headers),
 	}

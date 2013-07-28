@@ -30,7 +30,7 @@ var sendRequestTests = []struct {
 }{
 	{Request{
 		Method:  "GET",
-		URI:     "/",
+		Path:    "/",
 		Version: HTTP_1_1,
 		// no body
 	},
@@ -38,7 +38,7 @@ var sendRequestTests = []struct {
 	},
 	{Request{
 		Method:  "GET",
-		URI:     "/",
+		Path:    "/",
 		Version: HTTP_1_1,
 		Body:    b("Hello world!"),
 	},
@@ -46,7 +46,7 @@ var sendRequestTests = []struct {
 	},
 	{Request{
 		Method:  "GET",
-		URI:     "/",
+		Path:    "/",
 		Version: HTTP_1_1,
 		Body:    b("Hello world!"),
 		Headers: []Header{{
