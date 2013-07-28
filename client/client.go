@@ -10,8 +10,8 @@
 package client
 
 import (
-	"bytes"
 	"bufio"
+	"bytes"
 	"errors"
 	"fmt"
 	"io"
@@ -53,7 +53,9 @@ type Request struct {
 // ContentLength returns the length of the body. If the body length is not known
 // ContentLength will return -1.
 func (r *Request) ContentLength() int64 {
-	if r.Body == nil { return -1 }
+	if r.Body == nil {
+		return -1
+	}
 	switch b := r.Body.(type) {
 	case *bytes.Buffer:
 		return int64(b.Len())
@@ -100,7 +102,12 @@ func (c *client) WriteRequest(req *Request) error {
 		return err
 	}
 	if req.Body != nil {
-		if err := c.WriteBody(req.Body); err != nil {
+		l := req.ContentLength()
+		body := req.Body
+		if l > -1 {
+			body = body
+		}
+		if err := c.WriteBody(body); err != nil {
 			return err
 		}
 	}

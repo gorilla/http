@@ -242,10 +242,10 @@ func TestVersionString(t *testing.T) {
 var requestContentLengthTests = []struct {
 	Request
 	expected int64
-} {
-	{ Request{ Body: nil }, -1 },
-	{ Request{ Body: bytes.NewBuffer([]byte("hello world")) }, 11 },
-	{ Request{ Body: strings.NewReader("hello world") }, 11 },
+}{
+	{Request{Body: nil}, -1},
+	{Request{Body: bytes.NewBuffer([]byte("hello world"))}, 11},
+	{Request{Body: strings.NewReader("hello world")}, 11},
 }
 
 func TestRequestContentLength(t *testing.T) {
