@@ -91,16 +91,6 @@ func (c *client) WriteRequest(req *Request) error {
 	return nil
 }
 
-// Status represents an HTTP status code.
-type Status struct {
-	Code   int
-	Reason string
-}
-
-func (s Status) String() string { return fmt.Sprintf("%d %s", s.Code, s.Reason) }
-
-var invalidStatus Status
-
 // ReadResponse unmarshalls a HTTP response.
 func (c *client) ReadResponse() (*Response, error) {
 	version, code, msg, err := c.ReadStatusLine()

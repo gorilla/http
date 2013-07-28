@@ -221,22 +221,6 @@ func TestTransferEncoding(t *testing.T) {
 	}
 }
 
-var statusStringTests = []struct {
-	Status
-	expected string
-}{
-	{Status{200, "OK"}, "200 OK"},
-	{Status{418, "I'm a teapot"}, "418 I'm a teapot"},
-}
-
-func TestStatusString(t *testing.T) {
-	for _, tt := range statusStringTests {
-		if actual := tt.Status.String(); actual != tt.expected {
-			t.Errorf("Status{%d, %q}.String(): expected %q, got %q", tt.Status.Code, tt.Status.Reason, tt.expected, actual)
-		}
-	}
-}
-
 var versionStringTests = []struct {
 	Version
 	expected string
