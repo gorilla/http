@@ -76,6 +76,18 @@ var requestTests = []struct {
 			"aaaaaaaaaaaaa: ++++++++++\r\n" +
 			"\r\n",
 	},
+	{
+		name: "fragment in uri",
+		Request: Request{
+			Method: "GET",
+			Path: "/forums/1/topics/2375",
+  			Query: []string{"page=1"},
+			Version: HTTP_1_1,
+		},
+		// modified, sending a fragment sounds wrong.
+		expected :"GET /forums/1/topics/2375?page=1 HTTP/1.1\r\n"+
+         		"\r\n",
+	},
 }
 
 func TestRequest(t *testing.T) {

@@ -41,6 +41,7 @@ type Header struct {
 type Request struct {
 	Method string
 	Path   string
+	Query	[]string
 	Version
 
 	Headers []Header
@@ -72,7 +73,7 @@ type client struct {
 
 // SendRequest marshalls a HTTP request to the wire.
 func (c *client) WriteRequest(req *Request) error {
-	if err := c.WriteRequestLine(req.Method, req.Path, nil, req.Version.String()); err != nil {
+	if err := c.WriteRequestLine(req.Method, req.Path, req.Query, req.Version.String()); err != nil {
 		return err
 	}
 	for _, h := range req.Headers {
