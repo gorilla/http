@@ -238,3 +238,21 @@ func TestVersionString(t *testing.T) {
 		}
 	}
 }
+
+var requestContentLengthTests = []struct {
+	Request
+	expected int64
+} {
+	{ Request{ Body: nil }, -1 },
+	{ Request{ Body: bytes.NewBuffer([]byte("hello world")) }, 11 },
+	{ Request{ Body: strings.NewReader("hello world") }, 11 },
+}
+
+func TestRequestContentLength(t *testing.T) {
+	for _, tt := range requestContentLengthTests {
+		actual := tt.Request.ContentLength()
+		if tt.expected != actual {
+			t.Errorf("Request.ContentLength: expected %d, got %d", tt.expected, actual)
+		}
+	}
+}

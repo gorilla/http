@@ -10,6 +10,7 @@
 package client
 
 import (
+	"bytes"
 	"bufio"
 	"errors"
 	"fmt"
@@ -47,6 +48,20 @@ type Request struct {
 	Headers []Header
 
 	Body io.Reader
+}
+
+// ContentLength returns the length of the body. If the body length is not known
+// ContentLength will return -1.
+func (r *Request) ContentLength() int64 {
+	if r.Body == nil { return -1 }
+	switch b := r.Body.(type) {
+	case *bytes.Buffer:
+		return int64(b.Len())
+	case *strings.Reader:
+		return int64(b.Len())
+	default:
+		return -1
+	}
 }
 
 const readerBuffer = 4096
