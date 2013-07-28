@@ -49,8 +49,8 @@ the idea of connection reuse and pooling.
 
 Instead `gorilla/http` will address this in two ways
  1. The high level functions in the `gorilla/http` package do not return types that require closing, for example,
-`gorilla/http.Get(url string)` will return a `[]byte` and an `error`. The `[]byte` contains the entire response
-body. This should be sufficient for many REST style http calls which exchange small messages.
+`gorilla/http.Get(w io.Writer, url string)` mirrors the interface of `io.Copy`. This should be sufficient for many
+REST style http calls which exchange small messages.
  2. A the `http.Client` layer, methods will return `an io.ReadCloser`, not a complex `Response` type. This
 `io.ReadCloser` *must* be closed before falling out of scope otherwise the client will panic the application.
 
