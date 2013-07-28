@@ -125,6 +125,48 @@ var requestTests = []struct {
 			"\r\n" +
 			"HELLO",
 	},
+	{
+		name: "post identity body world",
+		Request: Request{
+			Method:  "POST",
+			Path:    "/post_identity_body_world",
+			Query:   []string{"q=search"},
+			Version: HTTP_1_1,
+			Headers: []Header{
+				{"Accept", "*/*"},
+				{"Transfer-Encoding", "identity"},
+				{"Content-Length", "5"},
+			},
+			Body: strings.NewReader("World"),
+		},
+		// modified to remove the fragment
+		expected: "POST /post_identity_body_world?q=search HTTP/1.1\r\n" +
+			"Accept: */*\r\n" +
+			"Transfer-Encoding: identity\r\n" +
+			"Content-Length: 5\r\n" +
+			"\r\n" +
+			"World",
+	},
+	/**
+		{
+			name: "post - chunked body: all your base are belong to us",
+			Request: Request{
+				Method:  "POST",
+				Path:    "/post_chunked_all_your_base",
+				Version: HTTP_1_1,
+				Headers: []Header{
+					{"Transfer-Encoding", "chunked"},
+				},
+				Body: strings.NewReader("all your base are belong to us"),
+			},
+			expected: "POST /post_chunked_all_your_base HTTP/1.1\r\n" +
+				"Transfer-Encoding: chunked\r\n" +
+				"\r\n" +
+				"1e\r\nall your base are belong to us\r\n" +
+				"0\r\n" +
+				"\r\n",
+		},
+	**/
 }
 
 func TestRequest(t *testing.T) {
