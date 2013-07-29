@@ -271,6 +271,14 @@ var responseTests = []struct {
 				"</SOAP-ENV:Envelope>"),
 		},
 	},
+	{
+		name: "404 no headers no body",
+		data: "HTTP/1.1 404 Not Found\r\n\r\n",
+		Response: Response{
+			Version: HTTP_1_1,
+			Status:  Status{404, "Not Found"},
+		},
+	},
 }
 
 func TestResponse(t *testing.T) {
