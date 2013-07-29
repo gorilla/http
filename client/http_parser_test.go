@@ -151,26 +151,24 @@ var requestTests = []struct {
 			"\r\n" +
 			"World",
 	},
-	/**
-		{
-			name: "post - chunked body: all your base are belong to us",
-			Request: Request{
-				Method:  "POST",
-				Path:    "/post_chunked_all_your_base",
-				Version: HTTP_1_1,
-				Headers: []Header{
-					{"Transfer-Encoding", "chunked"},
-				},
-				Body: strings.NewReader("all your base are belong to us"),
+	{
+		name: "post - chunked body: all your base are belong to us",
+		Request: Request{
+			Method:  "POST",
+			Path:    "/post_chunked_all_your_base",
+			Version: HTTP_1_1,
+			Headers: []Header{
+			// SendRequest handles this for us
+			// {"Transfer-Encoding", "chunked"},
 			},
-			expected: "POST /post_chunked_all_your_base HTTP/1.1\r\n" +
-				"Transfer-Encoding: chunked\r\n" +
-				"\r\n" +
-				"1e\r\nall your base are belong to us\r\n" +
-				"0\r\n" +
-				"\r\n",
+			Body: b("all your base are belong to us"),
 		},
-	**/
+		expected: "POST /post_chunked_all_your_base HTTP/1.1\r\n" +
+			"Transfer-Encoding: chunked\r\n" +
+			"\r\n" +
+			"1e\r\nall your base are belong to us\r\n" +
+			"0\r\n",
+	},
 }
 
 func TestRequest(t *testing.T) {
