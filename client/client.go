@@ -53,6 +53,7 @@ type Request struct {
 // ContentLength returns the length of the body. If the body length is not known
 // ContentLength will return -1.
 func (r *Request) ContentLength() int64 {
+	// TODO(dfc) this should support anything with a Len() int64 method.
 	if r.Body == nil {
 		return -1
 	}
@@ -98,20 +99,32 @@ func (c *client) WriteRequest(req *Request) error {
 			return err
 		}
 	}
-	if err := c.StartBody(); err != nil {
-		return err
-	}
-	if req.Body != nil {
-		l := req.ContentLength()
-		body := req.Body
-		if l > -1 {
-			body = body
-		}
-		if err := c.WriteBody(body); err != nil {
+	l := req.ContentLength()
+	if l >= 0 {
+		if err := c.WriteHeader("Content-Length", fmt.Sprintf("%d", l)); err != nil {
 			return err
 		}
 	}
-	return nil
+	if req.Body == nil {
+		// doesn't actually start the body, just sends the terminating \r\n
+		return c.StartBody()
+	}
+	// TODO(dfc) Version should implement comparable so we can say version >= HTTP_1_1
+	if req.Version.major == 1 && req.Version.minor == 1 {
+		if l < 0 {
+			if err := c.WriteHeader("Transfer-Encoding", "chunked"); err != nil {
+				return err
+			}
+			if err := c.StartBody(); err != nil {
+				return err
+			}
+			return c.WriteChunked(req.Body)
+		}
+	}
+	if err := c.StartBody(); err != nil {
+		return err
+	}
+	return c.WriteBody(req.Body)
 }
 
 // ReadResponse unmarshalls a HTTP response.

@@ -28,32 +28,111 @@ var sendRequestTests = []struct {
 	Request
 	expected string
 }{
-	{Request{
-		Method:  "GET",
-		Path:    "/",
-		Version: HTTP_1_1,
-		// no body
-	},
+	{
+		Request{
+			Method:  "GET",
+			Path:    "/",
+			Version: HTTP_1_1,
+			// no body
+		},
 		"GET / HTTP/1.1\r\n\r\n",
 	},
-	{Request{
-		Method:  "GET",
-		Path:    "/",
-		Version: HTTP_1_1,
-		Body:    b("Hello world!"),
+	{
+		Request{
+			Method:  "GET",
+			Path:    "/",
+			Version: HTTP_1_0,
+			// empty body, without len
+			Body: b(""),
+		},
+		"GET / HTTP/1.0\r\n\r\n",
 	},
-		"GET / HTTP/1.1\r\n\r\nHello world!",
+	{
+		Request{
+			Method:  "GET",
+			Path:    "/",
+			Version: HTTP_1_1,
+			// empty body, without len
+			Body: b(""),
+		},
+		"GET / HTTP/1.1\r\nTransfer-Encoding: chunked\r\n\r\n0\r\n",
 	},
-	{Request{
-		Method:  "GET",
-		Path:    "/",
-		Version: HTTP_1_1,
-		Body:    b("Hello world!"),
-		Headers: []Header{{
-			Key: "Host", Value: "localhost",
-		}},
+	{
+		Request{
+			Method:  "GET",
+			Path:    "/",
+			Version: HTTP_1_0,
+			// empty body
+			Body: strings.NewReader(""),
+		},
+		"GET / HTTP/1.0\r\nContent-Length: 0\r\n\r\n",
 	},
-		"GET / HTTP/1.1\r\nHost: localhost\r\n\r\nHello world!",
+	{
+		Request{
+			Method:  "GET",
+			Path:    "/",
+			Version: HTTP_1_1,
+			// empty body
+			Body: strings.NewReader(""),
+		},
+		"GET / HTTP/1.1\r\nContent-Length: 0\r\n\r\n",
+	},
+	{
+		Request{
+			Method:  "GET",
+			Path:    "/",
+			Version: HTTP_1_0,
+			Body:    b("Hello world!"),
+		},
+		"GET / HTTP/1.0\r\n\r\nHello world!",
+	},
+	{
+		Request{
+			Method:  "GET",
+			Path:    "/",
+			Version: HTTP_1_1,
+			Body:    b("Hello world!"),
+		},
+		"GET / HTTP/1.1\r\nTransfer-Encoding: chunked\r\n\r\nc\r\nHello world!\r\n0\r\n",
+	},
+	{
+		Request{
+			Method:  "GET",
+			Path:    "/",
+			Version: HTTP_1_0,
+			Body:    strings.NewReader("Hello world!"),
+		},
+		"GET / HTTP/1.0\r\nContent-Length: 12\r\n\r\nHello world!",
+	},
+	{
+		Request{
+			Method:  "GET",
+			Path:    "/",
+			Version: HTTP_1_1,
+			Body:    strings.NewReader("Hello world!"),
+		},
+		"GET / HTTP/1.1\r\nContent-Length: 12\r\n\r\nHello world!",
+	},
+	{
+		Request{
+			Method:  "GET",
+			Path:    "/",
+			Version: HTTP_1_1,
+			Body:    strings.NewReader("Hello world!"),
+			Headers: []Header{{
+				Key: "Host", Value: "localhost",
+			}},
+		},
+		"GET / HTTP/1.1\r\nHost: localhost\r\nContent-Length: 12\r\n\r\nHello world!",
+	},
+	{
+		Request{
+			Method:  "POST",
+			Path:    "/foo",
+			Version: HTTP_1_0,
+			Body:    strings.NewReader("hello"),
+		},
+		"POST /foo HTTP/1.0\r\nContent-Length: 5\r\n\r\nhello",
 	},
 }
 

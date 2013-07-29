@@ -111,20 +111,23 @@ var requestTests = []struct {
 			"Accept: */*\r\n" +
 			"\r\n",
 	},
-	{
-		name: "get funky content length body hello",
-		Request: Request{
-			Method:  "GET",
-			Path:    "/get_funky_content_length_body_hello",
-			Version: HTTP_1_0,
-			Headers: []Header{{"conTENT-Length", "5"}},
-			Body:    strings.NewReader("HELLO"),
+	/**
+		// SendRequest supplies a content length
+		{
+			name: "get funky content length body hello",
+			Request: Request{
+				Method:  "GET",
+				Path:    "/get_funky_content_length_body_hello",
+				Version: HTTP_1_0,
+				Headers: []Header{{"conTENT-Length", "5"}},
+				Body:    strings.NewReader("HELLO"),
+			},
+			expected: "GET /get_funky_content_length_body_hello HTTP/1.0\r\n" +
+				"conTENT-Length: 5\r\n" +
+				"\r\n" +
+				"HELLO",
 		},
-		expected: "GET /get_funky_content_length_body_hello HTTP/1.0\r\n" +
-			"conTENT-Length: 5\r\n" +
-			"\r\n" +
-			"HELLO",
-	},
+	**/
 	{
 		name: "post identity body world",
 		Request: Request{
@@ -135,7 +138,8 @@ var requestTests = []struct {
 			Headers: []Header{
 				{"Accept", "*/*"},
 				{"Transfer-Encoding", "identity"},
-				{"Content-Length", "5"},
+				// SendRequest supplies a content length by default
+				//	{"Content-Length", "5"},
 			},
 			Body: strings.NewReader("World"),
 		},
