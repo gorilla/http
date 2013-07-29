@@ -287,6 +287,30 @@ var responseTests = []struct {
 			Status:  Status{Code: 301},
 		},
 	},
+	{
+		name: "200 trailing space on chunked body",
+		data: "HTTP/1.1 200 OK\r\n" +
+			"Content-Type: text/plain\r\n" +
+			"Transfer-Encoding: chunked\r\n" +
+			"\r\n" +
+			"25  \r\n" +
+			"This is the data in the first chunk\r\n" +
+			"\r\n" +
+			"1C\r\n" +
+			"and this is the second one\r\n" +
+			"\r\n" +
+			"0  \r\n" +
+			"\r\n",
+		Response: Response{
+			Version: HTTP_1_1,
+			Status:  Status{200, "OK"},
+			Headers: []Header{
+				{"Content-Type", "text/plain"},
+				{"Transfer-Encoding", "chunked"},
+			},
+			Body: strings.NewReader("This is the data in the first chunk\r\nand this is the second one\r\n"),
+		},
+	},
 }
 
 func TestResponse(t *testing.T) {
