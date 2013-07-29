@@ -101,6 +101,7 @@ var readHeaderTests = []struct {
 	{"Connection:close\r\n\r\n", "Connection", "close", false, nil},
 	{"Vary : gzip\r\n", "Vary", "gzip", false, nil},
 	{"\r\n", "", "", true, nil},
+	{"Host: foo\n", "Host", "foo", false, nil},
 }
 
 func TestReadHeader(t *testing.T) {

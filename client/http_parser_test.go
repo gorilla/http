@@ -311,12 +311,30 @@ var responseTests = []struct {
 			Body: strings.NewReader("This is the data in the first chunk\r\nand this is the second one\r\n"),
 		},
 	},
+	{
+		name: "no carriage ret",
+		data: "HTTP/1.1 200 OK\n" +
+			"Content-Type: text/html; charset=utf-8\n" +
+			"Connection: close\n" +
+			"\n" +
+			"these headers are from http://news.ycombinator.com/",
+		Response: Response{
+			Version: HTTP_1_1,
+			Status:  Status{200, "OK"},
+			Headers: []Header{
+				{"Content-Type", "text/html; charset=utf-8"},
+				{"Connection", "close"},
+			},
+			Body: strings.NewReader("these headers are from http://news.ycombinator.com/"),
+		},
+	},
 }
 
 func TestResponse(t *testing.T) {
 	for _, tt := range responseTests {
 		client := &client{reader: reader{Reader: bufio.NewReader(strings.NewReader(tt.data))}}
 		resp, err := client.ReadResponse()
+		t.Log(tt.name)
 		if !sameErr(err, tt.err) {
 			t.Errorf("client.ReadResponse(%q): err expected %v, got %v", tt.data, tt.err, err)
 			continue

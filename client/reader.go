@@ -121,7 +121,7 @@ func (r *reader) ReadHeader() (string, string, bool, error) {
 	if err != nil {
 		return "", "", false, err
 	}
-	if string(line) == "\r\n" {
+	if line := string(line); line == "\r\n" || line == "\n" {
 		return "", "", true, nil
 	}
 	v := bytes.SplitN(line, []byte(":"), 2)
