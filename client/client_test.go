@@ -217,6 +217,7 @@ func TestClientReadResponse(t *testing.T) {
 			_, err = io.Copy(&buf, tt.Response.Body)
 			expected = buf.String()
 		}
+		buf.Reset()
 		if resp.Body != nil {
 			_, err = io.Copy(&buf, resp.Body)
 			actual = buf.String()

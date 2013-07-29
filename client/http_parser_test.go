@@ -5,7 +5,10 @@ package client
 // http_parser is listed as a MIT compatible licence.
 
 import (
+	"bufio"
 	"bytes"
+	"io"
+	"reflect"
 	"strings"
 	"testing"
 )
@@ -178,6 +181,87 @@ func TestRequest(t *testing.T) {
 		err := c.WriteRequest(&tt.Request)
 		if actual := b.String(); actual != tt.expected || err != tt.err {
 			t.Errorf("%s: expected %q %v, got %q, %v", tt.name, tt.expected, tt.err, actual, err)
+		}
+	}
+}
+
+var responseTests = []struct {
+	name string
+	data string
+	Response
+	err error
+}{
+	{
+		name: "google 301",
+		data: "HTTP/1.1 301 Moved Permanently\r\n" +
+			"Location: http://www.google.com/\r\n" +
+			"Content-Type: text/html; charset=UTF-8\r\n" +
+			"Date: Sun, 26 Apr 2009 11:11:49 GMT\r\n" +
+			"Expires: Tue, 26 May 2009 11:11:49 GMT\r\n" +
+			"X-$PrototypeBI-Version: 1.6.0.3\r\n" +
+			"Cache-Control: public, max-age=2592000\r\n" +
+			"Server: gws\r\n" +
+			"Content-Length:  219  \r\n" +
+			"\r\n" +
+			"<HTML><HEAD><meta http-equiv=\"content-type\" content=\"text/html;charset=utf-8\">\n" +
+			"<TITLE>301 Moved</TITLE></HEAD><BODY>\n" +
+			"<H1>301 Moved</H1>\n" +
+			"The document has moved\n" +
+			"<A HREF=\"http://www.google.com/\">here</A>.\r\n" +
+			"</BODY></HTML>\r\n",
+		Response: Response{
+			Version: HTTP_1_1,
+			Status:  Status{301, "Moved Permanently"},
+			Headers: []Header{
+				{"Location", "http://www.google.com/"},
+				{"Content-Type", "text/html; charset=UTF-8"},
+				{"Date", "Sun, 26 Apr 2009 11:11:49 GMT"},
+				{"Expires", "Tue, 26 May 2009 11:11:49 GMT"},
+				{"X-$PrototypeBI-Version", "1.6.0.3"},
+				{"Cache-Control", "public, max-age=2592000"},
+				{"Server", "gws"},
+				// {"Content-Length", "219  "},
+				// TODO(dfc) should trailing whitespace be preserved?
+				{"Content-Length", "219"},
+			},
+			Body: strings.NewReader("<HTML><HEAD><meta http-equiv=\"content-type\" content=\"text/html;charset=utf-8\">\n" +
+				"<TITLE>301 Moved</TITLE></HEAD><BODY>\n" +
+				"<H1>301 Moved</H1>\n" +
+				"The document has moved\n" +
+				"<A HREF=\"http://www.google.com/\">here</A>.\r\n" +
+				"</BODY></HTML>\r\n"),
+		},
+	},
+}
+
+func TestResponse(t *testing.T) {
+	for _, tt := range responseTests {
+		client := &client{reader: reader{Reader: bufio.NewReader(strings.NewReader(tt.data))}}
+		resp, err := client.ReadResponse()
+		if resp.Version != tt.Response.Version || resp.Status != tt.Response.Status {
+			t.Errorf("client.ReadResponse(%q): expected %q %q, got %q %q", tt.data, tt.Response.Version, tt.Response.Status, resp.Version, resp.Status)
+			continue
+		}
+		if !reflect.DeepEqual(tt.Response.Headers, resp.Headers) || err != tt.err {
+			t.Errorf("client.ReadResponse(%q): expected %v %v, got %v %v", tt.data, tt.Response.Headers, tt.err, resp.Headers, err)
+			continue
+		}
+		if err != nil {
+			continue
+		}
+		var buf bytes.Buffer
+		var expected, actual string
+		if tt.Response.Body != nil {
+			_, err = io.Copy(&buf, tt.Response.Body)
+			expected = buf.String()
+		}
+		buf.Reset()
+		if resp.Body != nil {
+			_, err = io.Copy(&buf, resp.Body)
+			actual = buf.String()
+		}
+		if actual != expected || err != tt.err {
+			t.Errorf("client.ReadResponse(%q): expected %q %v, got %q %v", tt.data, expected, tt.err, actual, err)
 		}
 	}
 }

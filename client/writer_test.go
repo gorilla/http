@@ -131,6 +131,19 @@ func TestDoubleWriteBody(t *testing.T) {
 	}
 }
 
+func TestDoubleWriteChunked(t *testing.T) {
+	c := &writer{Writer: new(bytes.Buffer)}
+	c.StartBody()
+	if err := c.WriteChunked(b("")); err != nil {
+		t.Fatal(err)
+	}
+	err := c.WriteChunked(b(""))
+	expected := `phase error: expected body, got requestline`
+	if actual := err.Error(); actual != expected {
+		t.Fatalf("phaseError.Error(): expected %q, got %q", expected, actual)
+	}
+}
+
 type header struct{ key, value string }
 type writeTest struct {
 	headers  []header
