@@ -3,7 +3,6 @@ package client
 import (
 	"bufio"
 	"bytes"
-	"errors"
 	"fmt"
 	"io"
 )
@@ -126,7 +125,7 @@ func (r *reader) ReadHeader() (string, string, bool, error) {
 	}
 	v := bytes.SplitN(line, []byte(":"), 2)
 	if len(v) != 2 {
-		return "", "", false, errors.New("invalid header line")
+		return "", "", false, fmt.Errorf("invalid header line: %q", line)
 	}
 	return string(bytes.TrimSpace(v[0])), string(bytes.TrimSpace(v[1])), false, nil
 }

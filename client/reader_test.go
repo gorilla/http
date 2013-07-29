@@ -94,7 +94,7 @@ var readHeaderTests = []struct {
 	err        error
 }{
 	{"Host: localhost\r\n", "Host", "localhost", false, nil},
-	{"Host localhost\r\n", "", "", false, errors.New("invalid header line")},
+	{"Host localhost\r\n", "", "", false, errors.New(`invalid header line: "Host localhost\r\n"`)},
 	{"Host: localhost", "", "", false, io.EOF},
 	{"Host: localhost\r\n\r\n", "Host", "localhost", false, nil},
 	{"Connection:close\r\n", "Connection", "close", false, nil},
@@ -102,6 +102,7 @@ var readHeaderTests = []struct {
 	{"Vary : gzip\r\n", "Vary", "gzip", false, nil},
 	{"\r\n", "", "", true, nil},
 	{"Host: foo\n", "Host", "foo", false, nil},
+	{"Pragma: \r\n", "Pragma", "", false, nil},
 }
 
 func TestReadHeader(t *testing.T) {
@@ -127,6 +128,7 @@ var readHeadersTests = []struct {
 	{"\r\n", nil, true},
 	{"Host: localhost\r\nConnection:close\r\n", []Header{{"Host", "localhost"}, {"Connection", "close"}}, false},
 	{"Host: localhost\r\nConnection:close\r\n\r\n", []Header{{"Host", "localhost"}, {"Connection", "close"}}, true},
+	{"Pragma: \r\nContent-Length: 100\r\n\r\n", []Header{{"Pragma", ""}, {"Content-Length", "100"}}, true},
 }
 
 func TestReadHeaders(t *testing.T) {

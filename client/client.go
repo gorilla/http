@@ -141,7 +141,8 @@ func (c *client) ReadResponse() (*Response, error) {
 		if err != nil || done {
 			break
 		}
-		if key == "" || value == "" {
+		if key == "" {
+			// empty header values are valid, rfc 2616 s4.2.
 			err = errors.New("invalid header")
 			break
 		}

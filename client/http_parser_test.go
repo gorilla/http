@@ -328,6 +328,74 @@ var responseTests = []struct {
 			Body: strings.NewReader("these headers are from http://news.ycombinator.com/"),
 		},
 	},
+	{
+		name: "proxy connection",
+		data: "HTTP/1.1 200 OK\r\n" +
+			"Content-Type: text/html; charset=UTF-8\r\n" +
+			"Content-Length: 11\r\n" +
+			"Proxy-Connection: close\r\n" +
+			"Date: Thu, 31 Dec 2009 20:55:48 +0000\r\n" +
+			"\r\n" +
+			"hello world",
+		Response: Response{
+			Version: HTTP_1_1,
+			Status:  Status{200, "OK"},
+			Headers: []Header{
+				{"Content-Type", "text/html; charset=UTF-8"},
+				{"Content-Length", "11"},
+				{"Proxy-Connection", "close"},
+				{"Date", "Thu, 31 Dec 2009 20:55:48 +0000"},
+			},
+			Body: b("hello world"),
+		},
+	},
+	{
+		name: "underscore header key",
+		data: "HTTP/1.1 200 OK\r\n" +
+			"Server: DCLK-AdSvr\r\n" +
+			"Content-Type: text/xml\r\n" +
+			"Content-Length: 0\r\n" +
+			"DCLK_imp: v7;x;114750856;0-0;0;17820020;0/0;21603567/21621457/1;;~okv=;dcmt=text/xml;;~cs=o\r\n\r\n",
+		Response: Response{
+			Version: HTTP_1_1,
+			Status:  Status{200, "OK"},
+			Headers: []Header{
+				{"Server", "DCLK-AdSvr"},
+				{"Content-Type", "text/xml"},
+				{"Content-Length", "0"},
+				{"DCLK_imp", "v7;x;114750856;0-0;0;17820020;0/0;21603567/21621457/1;;~okv=;dcmt=text/xml;;~cs=o"},
+			},
+		},
+	},
+	{
+		name: "bonjourmadame.fr",
+		data: "HTTP/1.0 301 Moved Permanently\r\n" +
+			"Date: Thu, 03 Jun 2010 09:56:32 GMT\r\n" +
+			"Server: Apache/2.2.3 (Red Hat)\r\n" +
+			"Cache-Control: public\r\n" +
+			"Pragma: \r\n" +
+			"Location: http://www.bonjourmadame.fr/\r\n" +
+			"Vary: Accept-Encoding\r\n" +
+			"Content-Length: 0\r\n" +
+			"Content-Type: text/html; charset=UTF-8\r\n" +
+			"Connection: keep-alive\r\n" +
+			"\r\n",
+		Response: Response{
+			Version: HTTP_1_0,
+			Status:  Status{301, "Moved Permanently"},
+			Headers: []Header{
+				{"Date", "Thu, 03 Jun 2010 09:56:32 GMT"},
+				{"Server", "Apache/2.2.3 (Red Hat)"},
+				{"Cache-Control", "public"},
+				{"Pragma", ""},
+				{"Location", "http://www.bonjourmadame.fr/"},
+				{"Vary", "Accept-Encoding"},
+				{"Content-Length", "0"},
+				{"Content-Type", "text/html; charset=UTF-8"},
+				{"Connection", "keep-alive"},
+			},
+		},
+	},
 }
 
 func TestResponse(t *testing.T) {
