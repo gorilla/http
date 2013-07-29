@@ -195,6 +195,20 @@ var readResponseTests = []struct {
 			Status:  Status{200, "OK"},
 			Headers: []Header{{"Host", "localhost"}, {"Connection", "close"}},
 		}, io.EOF},
+	// excessively long chunk.
+	{"HTTP/1.1 200 Ok\r\nTransfer-encoding: chunked\r\n\r\n" +
+		"004\r\n1234\r\n" +
+		"1000000000000000000001\r\n@\r\n" +
+		"00000000\r\n" +
+		"\r\n",
+		&Response{
+			Version: HTTP_1_1,
+			Status:  Status{200, "Ok"},
+			Headers: []Header{{"Transfer-encoding", "chunked"}},
+			Body:    b("1234@"),
+		},
+		nil,
+	},
 }
 
 func TestClientReadResponse(t *testing.T) {
