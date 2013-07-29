@@ -396,6 +396,106 @@ var responseTests = []struct {
 			},
 		},
 	},
+	{
+		name: "field underscore",
+		data: "HTTP/1.1 200 OK\r\n" +
+			"Date: Tue, 28 Sep 2010 01:14:13 GMT\r\n" +
+			"Server: Apache\r\n" +
+			"Cache-Control: no-cache, must-revalidate\r\n" +
+			"Expires: Mon, 26 Jul 1997 05:00:00 GMT\r\n" +
+			".et-Cookie: PlaxoCS=1274804622353690521; path=/; domain=.plaxo.com\r\n" +
+			"Vary: Accept-Encoding\r\n" +
+			"_eep-Alive: timeout=45\r\n" + /* semantic value ignored */
+			"_onnection: Keep-Alive\r\n" + /* semantic value ignored */
+			"Transfer-Encoding: chunked\r\n" +
+			"Content-Type: text/html\r\n" +
+			"Connection: close\r\n" +
+			"\r\n" +
+			"0\r\n\r\n",
+		Response: Response{
+			Version: HTTP_1_1,
+			Status:  Status{200, "OK"},
+			Headers: []Header{
+				{"Date", "Tue, 28 Sep 2010 01:14:13 GMT"},
+				{"Server", "Apache"},
+				{"Cache-Control", "no-cache, must-revalidate"},
+				{"Expires", "Mon, 26 Jul 1997 05:00:00 GMT"},
+				{".et-Cookie", "PlaxoCS=1274804622353690521; path=/; domain=.plaxo.com"},
+				{"Vary", "Accept-Encoding"},
+				{"_eep-Alive", "timeout=45"},
+				{"_onnection", "Keep-Alive"},
+				{"Transfer-Encoding", "chunked"},
+				{"Content-Type", "text/html"},
+				{"Connection", "close"},
+			},
+		},
+	},
+	{
+		name: "non-ASCII in status line",
+		data: "HTTP/1.1 500 Oriëntatieprobleem\r\n" +
+			"Date: Fri, 5 Nov 2010 23:07:12 GMT+2\r\n" +
+			"Content-Length: 0\r\n" +
+			"Connection: close\r\n" +
+			"\r\n",
+		Response: Response{
+			Version: HTTP_1_1,
+			Status:  Status{500, "Oriëntatieprobleem"},
+			Headers: []Header{
+				{"Date", "Fri, 5 Nov 2010 23:07:12 GMT+2"},
+				{"Content-Length", "0"},
+				{"Connection", "close"},
+			},
+		},
+	},
+	{
+		name: "http version 0.9",
+		data: "HTTP/0.9 200 OK\r\n" +
+			"\r\n",
+		Response: Response{
+			Version: Version{0, 9},
+			Status:  Status{200, "OK"},
+		},
+	},
+	{
+		name: "neither content-length nor transfer-encoding response",
+		data: "HTTP/1.1 200 OK\r\n" +
+			"Content-Type: text/plain\r\n" +
+			"\r\n" +
+			"hello world",
+		Response: Response{
+			Version: HTTP_1_1,
+			Status:  Status{200, "OK"},
+			Headers: []Header{{"Content-Type", "text/plain"}},
+			Body:    b("hello world"),
+		},
+	},
+	{
+		name: "field space",
+		data: "HTTP/1.1 200 OK\r\n" +
+			"Server: Microsoft-IIS/6.0\r\n" +
+			"X-Powered-By: ASP.NET\r\n" +
+			"en-US Content-Type: text/xml\r\n" + /* this is the problem */
+			"Content-Type: text/xml\r\n" +
+			"Content-Length: 16\r\n" +
+			"Date: Fri, 23 Jul 2010 18:45:38 GMT\r\n" +
+			"Connection: keep-alive\r\n" +
+			"\r\n" +
+			"<xml>hello</xml>", /* fake body */
+		Response: Response{
+			Version: HTTP_1_1,
+			Status:  Status{200, "OK"},
+			Headers: []Header{
+				{"Server", "Microsoft-IIS/6.0"},
+				{"X-Powered-By", "ASP.NET"},
+				{"en-US Content-Type", "text/xml"},
+				{"Content-Type", "text/xml"},
+				{"Content-Length", "16"},
+				{"Date", "Fri, 23 Jul 2010 18:45:38 GMT"},
+				{"Connection", "keep-alive"},
+			},
+			Body: b("<xml>hello</xml>"),
+		},
+	},
 }
 
 func TestResponse(t *testing.T) {
