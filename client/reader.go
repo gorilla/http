@@ -88,7 +88,12 @@ func (r *reader) ReadStatusCode() (int, error) {
 				}
 			}
 		case 3:
-			if c != ' ' {
+			switch c {
+			case '\r':
+				// special case "HTTP/1.1 301\r\n" has a blank reason.
+			case ' ':
+				// nothing
+			default:
 				return 0, fmt.Errorf("ReadStatusCode: expected %q, got %q at position %v", ' ', c, pos)
 			}
 		}

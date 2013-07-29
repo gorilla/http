@@ -279,12 +279,24 @@ var responseTests = []struct {
 			Status:  Status{404, "Not Found"},
 		},
 	},
+	{
+		name: "301 no response phrase",
+		data: "HTTP/1.1 301\r\n\r\n",
+		Response: Response{
+			Version: HTTP_1_1,
+			Status:  Status{Code: 301},
+		},
+	},
 }
 
 func TestResponse(t *testing.T) {
 	for _, tt := range responseTests {
 		client := &client{reader: reader{Reader: bufio.NewReader(strings.NewReader(tt.data))}}
 		resp, err := client.ReadResponse()
+		if !sameErr(err, tt.err) {
+			t.Errorf("client.ReadResponse(%q): err expected %v, got %v", tt.data, tt.err, err)
+			continue
+		}
 		if resp.Version != tt.Response.Version || resp.Status != tt.Response.Status {
 			t.Errorf("client.ReadResponse(%q): Version/Status expected %q %q, got %q %q", tt.data, tt.Response.Version, tt.Response.Status, resp.Version, resp.Status)
 			continue

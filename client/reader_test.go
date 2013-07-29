@@ -73,6 +73,7 @@ var readStatusLineTests = []struct {
 	{"HTTP/1.0 200 OK\r\n", HTTP_1_0, 200, "OK", nil},
 	{"HTTP/1.1 200 OK\r\n\r\n", HTTP_1_1, 200, "OK", nil},
 	{"HTTP/1.0 200", Version{}, 0, "", io.EOF},
+	{"HTTP/1.0 200\r\n", HTTP_1_0, 200, "", nil},
 	{"HTTP/1.0", Version{}, 0, "", io.EOF},
 }
 
