@@ -232,6 +232,45 @@ var responseTests = []struct {
 				"</BODY></HTML>\r\n"),
 		},
 	},
+	{
+		name: "no content-length response",
+		data: "HTTP/1.1 200 OK\r\n" +
+			"Date: Tue, 04 Aug 2009 07:59:32 GMT\r\n" +
+			"Server: Apache\r\n" +
+			"X-Powered-By: Servlet/2.5 JSP/2.1\r\n" +
+			"Content-Type: text/xml; charset=utf-8\r\n" +
+			"Connection: close\r\n" +
+			"\r\n" +
+			"<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n" +
+			"<SOAP-ENV:Envelope xmlns:SOAP-ENV=\"http://schemas.xmlsoap.org/soap/envelope/\">\n" +
+			"  <SOAP-ENV:Body>\n" +
+			"    <SOAP-ENV:Fault>\n" +
+			"       <faultcode>SOAP-ENV:Client</faultcode>\n" +
+			"       <faultstring>Client Error</faultstring>\n" +
+			"    </SOAP-ENV:Fault>\n" +
+			"  </SOAP-ENV:Body>\n" +
+			"</SOAP-ENV:Envelope>",
+		Response: Response{
+			Version: HTTP_1_1,
+			Status:  Status{200, "OK"},
+			Headers: []Header{
+				{"Date", "Tue, 04 Aug 2009 07:59:32 GMT"},
+				{"Server", "Apache"},
+				{"X-Powered-By", "Servlet/2.5 JSP/2.1"},
+				{"Content-Type", "text/xml; charset=utf-8"},
+				{"Connection", "close"},
+			},
+			Body: strings.NewReader("<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n" +
+				"<SOAP-ENV:Envelope xmlns:SOAP-ENV=\"http://schemas.xmlsoap.org/soap/envelope/\">\n" +
+				"  <SOAP-ENV:Body>\n" +
+				"    <SOAP-ENV:Fault>\n" +
+				"       <faultcode>SOAP-ENV:Client</faultcode>\n" +
+				"       <faultstring>Client Error</faultstring>\n" +
+				"    </SOAP-ENV:Fault>\n" +
+				"  </SOAP-ENV:Body>\n" +
+				"</SOAP-ENV:Envelope>"),
+		},
+	},
 }
 
 func TestResponse(t *testing.T) {
@@ -239,14 +278,15 @@ func TestResponse(t *testing.T) {
 		client := &client{reader: reader{Reader: bufio.NewReader(strings.NewReader(tt.data))}}
 		resp, err := client.ReadResponse()
 		if resp.Version != tt.Response.Version || resp.Status != tt.Response.Status {
-			t.Errorf("client.ReadResponse(%q): expected %q %q, got %q %q", tt.data, tt.Response.Version, tt.Response.Status, resp.Version, resp.Status)
+			t.Errorf("client.ReadResponse(%q): Version/Status expected %q %q, got %q %q", tt.data, tt.Response.Version, tt.Response.Status, resp.Version, resp.Status)
 			continue
 		}
 		if !reflect.DeepEqual(tt.Response.Headers, resp.Headers) || err != tt.err {
-			t.Errorf("client.ReadResponse(%q): expected %v %v, got %v %v", tt.data, tt.Response.Headers, tt.err, resp.Headers, err)
+			t.Errorf("client.ReadResponse(%q): Headers expected %v %v, got %v %v", tt.data, tt.Response.Headers, tt.err, resp.Headers, err)
 			continue
 		}
-		if err != nil {
+		if actual, expected := resp.CloseRequested(), tt.Response.CloseRequested(); actual != expected {
+			t.Errorf("client.ReadResponse(%q): CloseRequested expected %v, got %v", tt.data, expected, actual)
 			continue
 		}
 		var buf bytes.Buffer
