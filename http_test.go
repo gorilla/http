@@ -55,12 +55,12 @@ func TestInternalHttpServer(t *testing.T) {
 	newServer(t, nil).Shutdown()
 }
 
-var a string
-
-func init() {
+func a() string {
+	var a string
 	for i := 0; i < 1024; i++ {
 		a += "aaaaaaaa"
 	}
+	return a
 }
 
 var getTests = []struct {
@@ -70,7 +70,7 @@ var getTests = []struct {
 }{
 	{"/200", "OK", nil},
 	{"/404", "", errors.New("404 Not Found")},
-	// {"/a", a, nil},	// triggers chunked encoding
+	{"/a", a(), nil}, // triggers chunked encoding
 }
 
 func TestGet(t *testing.T) {
