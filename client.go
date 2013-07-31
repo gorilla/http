@@ -9,13 +9,12 @@ import (
 
 // Client implements a high level HTTP client. Client methods can be called concurrently
 // to as many end points as required.
-// Concurrency, connection reuse, caching, and keepalive behavior is managed by the
-// ConnectionManager.
 type Client struct {
 	dialer Dialer
 }
 
-// Do sends an HTTP request and returns an HTTP response.
+// Do sends an HTTP request and returns an HTTP response. If the response body is non nil
+// it must be closed.
 func (c *Client) Do(method, url string, headers map[string][]string, body io.Reader) (client.Status, map[string][]string, io.ReadCloser, error) {
 	if headers == nil {
 		headers = make(map[string][]string)
@@ -67,7 +66,7 @@ type readCloser struct {
 	io.Closer
 }
 
-// Get sends a GET request
+// Get sends a GET request. If the response body is non nil it must be closed.
 func (c *Client) Get(url string, headers map[string][]string) (client.Status, map[string][]string, io.ReadCloser, error) {
 	return c.Do("GET", url, headers, nil)
 }

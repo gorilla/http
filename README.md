@@ -10,25 +10,24 @@ This project is experimental. We welcome contributors and early adopters if you'
 
 # Introduction
 
-## Why do we need a new HTTP client, the Go standard library already has one ?
+## Why does Go need a new HTTP client, the standard library already has one ?
 
 The Go `net/http` package is excellent. It is fast, efficient, gets the job done, and comes batteries 
 included with every Go installation. At the same time the `net/http` package is a victim of its own
-success. The Go 1 contract is defines many fields in the `net/http` types which are redundant, surplus
-or wrong. 
+success. The Go 1 contract is defines many fields in the `net/http` types which are redundant or surplus.
 
 Similarly the success of the `net/http` package has enshrined bugs which cannot be changed due to the
 growing amount of software written to expect that behaviour.
 
 ## Client only
 
-One acknowledged mistake of the `net/http` package is its reuse of core types between server and client implementations. 
+One acknowledged shortcoming of the `net/http` package is its reuse of core types between server and client implementations. 
 
 At one level this is admirable, HTTP messages; requests and responses, are more alike than they are different so it
 makes good engineering sense to reuse their logic where possible. However, combined with the Go 1 contract, this has
 lead to compromises.
 
-`gorilla/http` is a Client implementation only, which allows us to focus on a set of layered types which encapsulate the
+`gorilla/http` is a client implementation only. This allows us to focus on a set of layered types which encapsulate the
 complete request flow from the client point of view without compromise.
 
 # Specific featues
@@ -73,6 +72,16 @@ As a client only package, `gorilla/http` has flexibility to bias correctness ove
 favor correctness of impemetantion over performance, and we believe this is the correct trade off. Having said that
 performance is a feature and `gorilla/http` strives to keep its overheads compared to the underlying network transit
 cost as low as possible.
+
+# Roadmap
+
+The roadmap for the project is captured as open isuses in GitHub. 
+
+# Contributions and feedback
+
+Please raise issues and suggestions on the GitHub project page, [https://github.com/gorilla/http/issues](https://github.com/gorilla/http/issues).
+
+Questions and discussion can also be directed to the general Gorilla mailing list [https://groups.google.com/group/gorilla-web](https://groups.google.com/group/gorilla-web).
 
 # Technical information
 
