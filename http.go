@@ -36,3 +36,17 @@ func Get(w io.Writer, url string) (int64, error) {
 	}
 	return io.Copy(w, r)
 }
+
+// Post issues a POST request using the DefaultClient using r as the body.
+// If the status code was not a success code, it will be returned as an error.
+func Post(url string, r io.Reader) error {
+	status, _, rc, err := DefaultClient.Post(url, nil, r)
+	if err != nil {
+		return err
+	}
+	defer rc.Close()
+	if !status.IsSuccess() {
+		return &StatusError{status}
+	}
+	return nil
+}

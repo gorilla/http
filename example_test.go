@@ -12,9 +12,16 @@ func ExampleGet() {
 	}
 }
 
+func ExamplePost() {
+	// send the contents of os.Stdin to a remote webserver.
+	if err := Post("http://www.example.com", os.Stdin); err != nil {
+		log.Fatalf("could not post: %v", err)
+	}
+}
+
 func ExampleClient_Post() {
 	// send the contents of os.Stdin to a remote webserver.
-	status, _, r, err := DefaultClient.Post("http://example.com", nil, os.Stdin)
+	status, _, r, err := DefaultClient.Post("http://www.example.com", nil, os.Stdin)
 	if err != nil {
 		log.Fatal(err)
 	}

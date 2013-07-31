@@ -4,8 +4,10 @@ import (
 	"bytes"
 	"errors"
 	"fmt"
+	"io"
 	"net"
 	"net/http"
+	"strings"
 	"testing"
 )
 
@@ -82,6 +84,32 @@ func TestGet(t *testing.T) {
 		n, err := Get(&b, url)
 		if actual := b.String(); actual != tt.expected || n != int64(len(tt.expected)) || !sameErr(err, tt.err) {
 			t.Errorf("Get(%q): expected %q %v, got %q %v", tt.path, tt.expected, tt.err, actual, err)
+		}
+	}
+}
+
+var postTests = []struct {
+	path string
+	body func() io.Reader
+	err  error
+}{
+	{"/201", func() io.Reader { return strings.NewReader(postBody) }, nil},
+	{"/201", func() io.Reader { return strings.NewReader("wrong") }, errors.New("400 Bad Request")},
+	{"/404", nil, errors.New("404 Not Found")},
+}
+
+func TestPost(t *testing.T) {
+	s := newServer(t, stdmux())
+	defer s.Shutdown()
+	for _, tt := range postTests {
+		url := s.Root() + tt.path
+		var body io.Reader
+		if tt.body != nil {
+			body = tt.body()
+		}
+		err := Post(url, body)
+		if !sameErr(err, tt.err) {
+			t.Errorf("Post(%q): expected %v, got %v", tt.path, tt.err, err)
 		}
 	}
 }
