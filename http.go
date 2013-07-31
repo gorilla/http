@@ -5,7 +5,7 @@
 //
 // These high level functions are expected to change. Your feedback on their form
 // and utility is warmly requested.
-// 
+//
 // Please raise issues at https://github.com/gorilla/http/issues.
 //
 // For lower level http implementations, see gorilla/http/client.
