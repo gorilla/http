@@ -40,6 +40,7 @@ func (c *Client) Do(method, url string, headers map[string][]string, body io.Rea
 		Method:  method,
 		Path:    path,
 		Version: client.HTTP_1_1,
+		Body:    body,
 		Headers: toHeaders(headers),
 	}
 	if err := conn.WriteRequest(&req); err != nil {
@@ -69,6 +70,11 @@ type readCloser struct {
 // Get sends a GET request. If the response body is non nil it must be closed.
 func (c *Client) Get(url string, headers map[string][]string) (client.Status, map[string][]string, io.ReadCloser, error) {
 	return c.Do("GET", url, headers, nil)
+}
+
+// Post sends a POST request, suppling the contents of the reader as the request body.
+func (c *Client) Post(url string, headers map[string][]string, body io.Reader) (client.Status, map[string][]string, io.ReadCloser, error) {
+	return c.Do("POST", url, headers, body)
 }
 
 func toHeaders(h map[string][]string) []client.Header {
