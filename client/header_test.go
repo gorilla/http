@@ -19,7 +19,7 @@ var headersSortTests = []struct {
 
 func TestHeadersSort(t *testing.T) {
 	for _, tt := range headersSortTests {
-		sort.Sort(headers(tt.headers)) // mutates test fixture
+		sort.Sort(Headers(tt.headers)) // mutates test fixture
 		if !reflect.DeepEqual(tt.headers, tt.expected) {
 			t.Errorf("expected %v, got %v", tt.expected, tt.headers)
 		}
