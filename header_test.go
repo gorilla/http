@@ -1,18 +1,18 @@
 package http
 
 import (
-	"testing"
-	"sort"
 	"reflect"
+	"sort"
+	"testing"
 
 	"github.com/gorilla/http/client"
 )
 
-var toHeadersTests = []struct {	
-	headers map[string][]string
+var toHeadersTests = []struct {
+	headers  map[string][]string
 	expected []client.Header
-} {
-	{ nil, nil },
+}{
+	{nil, nil},
 	{
 		map[string][]string{"Host": []string{"a"}},
 		[]client.Header{{"Host", "a"}},
@@ -23,7 +23,7 @@ var toHeadersTests = []struct {
 	},
 	{
 		map[string][]string{
-			"Host": []string{"a"},
+			"Host":       []string{"a"},
 			"Connection": []string{"close"},
 		},
 		[]client.Header{
@@ -33,7 +33,7 @@ var toHeadersTests = []struct {
 	},
 	{
 		map[string][]string{
-			"Host": []string{"a", "B"},
+			"Host":       []string{"a", "B"},
 			"Connection": []string{"close"},
 		},
 		[]client.Header{
@@ -49,6 +49,50 @@ func TestToHeaders(t *testing.T) {
 		sort.Sort(client.Headers(actual))
 		if !reflect.DeepEqual(tt.expected, actual) {
 			t.Errorf("toHeaders(%v): expected %v, got %v", tt.headers, tt.expected, actual)
+		}
+	}
+}
+
+var fromHeadersTests = []struct {
+	headers  []client.Header
+	expected map[string][]string
+}{
+	{nil, nil},
+	{
+		[]client.Header{{"Host", "a"}},
+		map[string][]string{"Host": []string{"a"}},
+	},
+	{
+		[]client.Header{{"Host", "B"}, {"Host", "a"}},
+		map[string][]string{"Host": []string{"B", "a"}},
+	},
+	{
+		[]client.Header{
+			{"Connection", "close"},
+			{"Host", "a"},
+		},
+		map[string][]string{
+			"Host":       []string{"a"},
+			"Connection": []string{"close"},
+		},
+	},
+	{
+		[]client.Header{
+			{"Connection", "close"},
+			{"Host", "B"}, {"Host", "a"},
+		},
+		map[string][]string{
+			"Host":       []string{"B", "a"},
+			"Connection": []string{"close"},
+		},
+	},
+}
+
+func TestFromHeaders(t *testing.T) {
+	for _, tt := range fromHeadersTests {
+		actual := fromHeaders(tt.headers)
+		if !reflect.DeepEqual(tt.expected, actual) {
+			t.Errorf("fromHeaders(%v): expected %v, got %v", tt.headers, tt.expected, actual)
 		}
 	}
 }
