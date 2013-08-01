@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"reflect"
 	"strings"
 	"testing"
 
@@ -25,26 +26,30 @@ var clientDoTests = []struct {
 	err      error
 }{
 	{
-		method: "GET",
-		path:   "/200",
-		Status: client.Status{200, "OK"},
+		method:   "GET",
+		path:     "/200",
+		Status:   client.Status{200, "OK"},
+		rheaders: map[string][]string{"Content-Length": []string{"2"}, "Content-Type": []string{"text/plain; charset=utf-8"}},
 	},
 	{
-		method: "GET",
-		path:   "/404",
-		Status: client.Status{404, "Not Found"},
+		method:   "GET",
+		path:     "/404",
+		Status:   client.Status{404, "Not Found"},
+		rheaders: map[string][]string{"Content-Length": []string{"19"}, "Content-Type": []string{"text/plain; charset=utf-8"}},
 	},
 	{
-		method: "GET",
-		path:   "/a",
-		Status: client.Status{200, "OK"},
-		rbody:  strings.NewReader("a"),
+		method:   "GET",
+		path:     "/a",
+		Status:   client.Status{200, "OK"},
+		rheaders: map[string][]string{"Transfer-Encoding": {"chunked"}, "Content-Type": []string{"text/plain; charset=utf-8"}},
+		rbody:    strings.NewReader("a"),
 	},
 	{
-		method: "POST",
-		path:   "/201",
-		body:   func() io.Reader { return strings.NewReader(postBody) },
-		Status: client.Status{201, "Created"},
+		method:   "POST",
+		path:     "/201",
+		body:     func() io.Reader { return strings.NewReader(postBody) },
+		Status:   client.Status{201, "Created"},
+		rheaders: map[string][]string{"Content-Length": []string{"8"}, "Content-Type": []string{"text/plain; charset=utf-8"}},
 	},
 }
 
@@ -78,32 +83,16 @@ func TestClientDo(t *testing.T) {
 		if tt.body != nil {
 			body = tt.body()
 		}
-		status, _, _, err := c.Do(tt.method, url, tt.headers, body)
+		status, headers, _, err := c.Do(tt.method, url, tt.headers, body)
 		if err != tt.err {
 			t.Errorf("Client.Do(%q, %q, %v, %v): err expected %v, got %v", tt.method, tt.path, tt.headers, tt.body, tt.err, err)
 		}
 		if status != tt.Status {
 			t.Errorf("Client.Do(%q, %q, %v, %v): status expected %v, got %v", tt.method, tt.path, tt.headers, tt.body, tt.Status, status)
 		}
-
-	}
-}
-
-func TestDefaultClientDo(t *testing.T) {
-	s := newServer(t, stdmux())
-	defer s.Shutdown()
-	for _, tt := range clientDoTests {
-		url := s.Root() + tt.path
-		var body io.Reader
-		if tt.body != nil {
-			body = tt.body()
-		}
-		status, _, _, err := DefaultClient.Do(tt.method, url, tt.headers, body)
-		if err != tt.err {
-			t.Errorf("Client.Do(%q, %q, %v, %v): err expected %v, got %v", tt.method, tt.path, tt.headers, tt.body, tt.err, err)
-		}
-		if status != tt.Status {
-			t.Errorf("Client.Do(%q, %q, %v, %v): status expected %v, got %v", tt.method, tt.path, tt.headers, tt.body, tt.Status, status)
+		delete(headers, "Date") // hard to predict
+		if !reflect.DeepEqual(tt.rheaders, headers) {
+			t.Errorf("Client.Do(%q, %q, %v, %v): headers expected %v, got %v", tt.method, tt.path, tt.headers, tt.body, tt.headers, headers)
 		}
 	}
 }
