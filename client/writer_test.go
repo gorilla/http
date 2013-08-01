@@ -144,15 +144,14 @@ func TestDoubleWriteChunked(t *testing.T) {
 	}
 }
 
-type header struct{ key, value string }
 type writeTest struct {
-	headers  []header
+	headers  []Header
 	body     string
 	expected string
 }
 
 var writeTests = []writeTest{
-	{[]header{{"Host", "localhost"}, {"Connection", "close"}},
+	{[]Header{{"Host", "localhost"}, {"Connection", "close"}},
 		"abcd1234",
 		"Host: localhost\r\nConnection: close\r\n\r\nabcd1234",
 	},
@@ -162,7 +161,7 @@ var writeTests = []writeTest{
 func (c *writer) write(t *testing.T, w writeTest) {
 	c.StartHeaders()
 	for _, h := range w.headers {
-		if err := c.WriteHeader(h.key, h.value); err != nil {
+		if err := c.WriteHeader(h.Key, h.Value); err != nil {
 			t.Fatal(err)
 		}
 	}

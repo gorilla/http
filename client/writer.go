@@ -11,7 +11,7 @@ type phase int
 
 const (
 	requestline phase = iota
-	headers
+	header
 	body
 )
 
@@ -19,7 +19,7 @@ func (p phase) String() string {
 	switch p {
 	case requestline:
 		return "requestline"
-	case headers:
+	case header:
 		return "headers"
 	case body:
 		return "body"
@@ -42,7 +42,7 @@ type writer struct {
 }
 
 // StartHeaders moves the Conn into the headers phase
-func (w *writer) StartHeaders() { w.phase = headers }
+func (w *writer) StartHeaders() { w.phase = header }
 
 // WriteRequestLine writes the RequestLine and moves the Conn to the headers phase
 func (w *writer) WriteRequestLine(method, path string, query []string, version string) error {
@@ -60,8 +60,8 @@ func (w *writer) WriteRequestLine(method, path string, query []string, version s
 
 // WriteHeader writes the canonical header form to the wire.
 func (w *writer) WriteHeader(key, value string) error {
-	if w.phase != headers {
-		return &phaseError{headers, w.phase}
+	if w.phase != header {
+		return &phaseError{header, w.phase}
 	}
 	_, err := fmt.Fprintf(w, "%s: %s\r\n", key, value)
 	return err
