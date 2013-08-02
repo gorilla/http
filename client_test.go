@@ -112,6 +112,9 @@ func TestClientDo(t *testing.T) {
 		if err != tt.err {
 			t.Errorf("Client.Do(%q, %q, %v, %v): err expected %v, got %v", tt.method, tt.path, tt.headers, tt.body, tt.err, err)
 		}
+		if err != nil {
+			continue
+		}
 		if status != tt.Status {
 			t.Errorf("Client.Do(%q, %q, %v, %v): status expected %v, got %v", tt.method, tt.path, tt.headers, tt.body, tt.Status, status)
 		}

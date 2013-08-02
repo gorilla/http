@@ -75,6 +75,7 @@ var readStatusLineTests = []struct {
 	{"HTTP/1.0 200", Version{}, 0, "", io.EOF},
 	{"HTTP/1.0 200\r\n", HTTP_1_0, 200, "", nil},
 	{"HTTP/1.0", Version{}, 0, "", io.EOF},
+	{"", Version{}, 0, "", io.EOF},
 }
 
 func TestReadStatusLine(t *testing.T) {

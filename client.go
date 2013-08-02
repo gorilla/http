@@ -21,7 +21,7 @@ func (c *Client) Do(method, url string, headers map[string][]string, body io.Rea
 	if headers == nil {
 		headers = make(map[string][]string)
 	}
-	u, err := stdurl.Parse(url)
+	u, err := stdurl.ParseRequestURI(url)
 	if err != nil {
 		return client.Status{}, nil, nil, err
 	}
