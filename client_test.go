@@ -2,6 +2,7 @@ package http
 
 import (
 	"bytes"
+	"compress/gzip"
 	"fmt"
 	"io"
 	"net/http"
@@ -30,19 +31,34 @@ var clientDoTests = []struct {
 		path:     "/200",
 		Status:   client.Status{200, "OK"},
 		rheaders: map[string][]string{"Content-Length": []string{"2"}, "Content-Type": []string{"text/plain; charset=utf-8"}},
+		rbody:    strings.NewReader("OK"),
 	},
 	{
 		method:   "GET",
 		path:     "/404",
 		Status:   client.Status{404, "Not Found"},
 		rheaders: map[string][]string{"Content-Length": []string{"19"}, "Content-Type": []string{"text/plain; charset=utf-8"}},
+		rbody:    strings.NewReader("404 page not found\n"),
 	},
 	{
 		method:   "GET",
 		path:     "/a",
 		Status:   client.Status{200, "OK"},
 		rheaders: map[string][]string{"Transfer-Encoding": {"chunked"}, "Content-Type": []string{"text/plain; charset=utf-8"}},
-		rbody:    strings.NewReader("a"),
+		rbody:    strings.NewReader(a()),
+	},
+	{
+		method:  "GET",
+		path:    "/a",
+		Status:  client.Status{200, "OK"},
+		headers: map[string][]string{"Accept-Encoding": []string{"gzip"}},
+		rheaders: map[string][]string{
+			// net/http can buffer the first write to avoid chunked
+			"Content-Length":   []string{"48"},
+			"Content-Encoding": []string{"gzip"},
+			"Content-Type":     []string{"application/x-gzip"},
+		},
+		rbody: strings.NewReader(a()),
 	},
 	{
 		method:   "POST",
@@ -50,15 +66,24 @@ var clientDoTests = []struct {
 		body:     func() io.Reader { return strings.NewReader(postBody) },
 		Status:   client.Status{201, "Created"},
 		rheaders: map[string][]string{"Content-Length": []string{"8"}, "Content-Type": []string{"text/plain; charset=utf-8"}},
+		rbody:    strings.NewReader("Created\n"),
 	},
 }
 
 func stdmux() *http.ServeMux {
 	mux := http.NewServeMux()
 	mux.HandleFunc("/200", func(w http.ResponseWriter, _ *http.Request) { w.Write([]byte("OK")) })
-	mux.HandleFunc("/a", func(w http.ResponseWriter, _ *http.Request) {
+	mux.HandleFunc("/a", func(w http.ResponseWriter, r *http.Request) {
+		var ww io.Writer = w
+		if r.Header.Get("Accept-Encoding") == "gzip" {
+			w.Header().Add("Content-Encoding", "gzip")
+			ww = gzip.NewWriter(ww)
+		}
 		for i := 0; i < 1024; i++ {
-			w.Write([]byte("aaaaaaaa"))
+			ww.Write([]byte("aaaaaaaa"))
+		}
+		if w, ok := ww.(*gzip.Writer); ok {
+			w.Close()
 		}
 	})
 	mux.HandleFunc("/201", func(w http.ResponseWriter, r *http.Request) {
@@ -83,7 +108,7 @@ func TestClientDo(t *testing.T) {
 		if tt.body != nil {
 			body = tt.body()
 		}
-		status, headers, _, err := c.Do(tt.method, url, tt.headers, body)
+		status, headers, rbody, err := c.Do(tt.method, url, tt.headers, body)
 		if err != tt.err {
 			t.Errorf("Client.Do(%q, %q, %v, %v): err expected %v, got %v", tt.method, tt.path, tt.headers, tt.body, tt.err, err)
 		}
@@ -92,9 +117,27 @@ func TestClientDo(t *testing.T) {
 		}
 		delete(headers, "Date") // hard to predict
 		if !reflect.DeepEqual(tt.rheaders, headers) {
-			t.Errorf("Client.Do(%q, %q, %v, %v): headers expected %v, got %v", tt.method, tt.path, tt.headers, tt.body, tt.headers, headers)
+			t.Errorf("Client.Do(%q, %q, %v, %v): headers expected %v, got %v", tt.method, tt.path, tt.headers, tt.body, tt.rheaders, headers)
+		}
+		if actual, expected := readBodies(t, rbody, tt.rbody); actual != expected {
+			t.Errorf("Client.Do(%q, %q, %v, %v): body expected %q, got %q", tt.method, tt.path, tt.headers, tt.body, expected, actual)
 		}
 	}
+}
+
+func readBodies(t *testing.T, a, b io.Reader) (string, string) {
+	return readBody(t, a), readBody(t, b)
+}
+
+func readBody(t *testing.T, r io.Reader) string {
+	if r == nil {
+		return ""
+	}
+	var b bytes.Buffer
+	if _, err := io.Copy(&b, r); err != nil {
+		t.Fatal(err)
+	}
+	return b.String()
 }
 
 var clientGetTests = []struct {

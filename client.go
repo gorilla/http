@@ -1,10 +1,12 @@
 package http
 
 import (
-	"github.com/gorilla/http/client"
+	"compress/gzip"
 	"io"
 	stdurl "net/url"
 	"strings"
+
+	"github.com/gorilla/http/client"
 )
 
 // Client implements a high level HTTP client. Client methods can be called concurrently
@@ -50,7 +52,14 @@ func (c *Client) Do(method, url string, headers map[string][]string, body io.Rea
 	if err != nil {
 		return client.Status{}, nil, nil, err
 	}
-	return resp.Status, fromHeaders(resp.Headers), &readCloser{resp.Body, conn}, nil
+	headers = fromHeaders(resp.Headers)
+	body = resp.Body
+	if h, ok := headers["Content-Encoding"]; ok {
+		if len(h) > 0 && h[0] == "gzip" {
+			body, err = gzip.NewReader(body)
+		}
+	}
+	return resp.Status, headers, &readCloser{body, conn}, err
 }
 
 // StatusError reprents a client.Status as an error.
