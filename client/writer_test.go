@@ -3,6 +3,7 @@ package client
 import (
 	"bytes"
 	"io"
+	"io/ioutil"
 	"strings"
 	"testing"
 )
@@ -221,6 +222,88 @@ func TestWriteChunked(t *testing.T) {
 		}
 		if actual := b.String(); actual != tt.expected {
 			t.Errorf("WriteBody: expected %q, got %q", tt.expected, actual)
+		}
+	}
+}
+
+var headerBufferingTests = []struct {
+	f func(*writer) error
+	n int
+}{
+	{
+		func(w *writer) error {
+			return w.WriteRequestLine("GET", "/", nil, HTTP_1_1.String())
+		},
+		1,
+	},
+	{
+		func(w *writer) error {
+			return w.WriteRequestLine("GET", "/foo", []string{"bar", "baz"}, HTTP_1_1.String())
+		},
+		1,
+	},
+	{
+		func(w *writer) error {
+			if err := w.WriteRequestLine("GET", "/foo", []string{"bar", "baz"}, HTTP_1_1.String()); err != nil {
+				return err
+			}
+			return w.WriteHeader("Host", "localhost")
+		},
+		2, // TODO(dfc) should be 1 once buffered
+	},
+	{
+		func(w *writer) error {
+			if err := w.WriteRequestLine("GET", "/foo", []string{"bar", "baz"}, HTTP_1_1.String()); err != nil {
+				return err
+			}
+			for _, h := range []Header{{"Host", "localhost"}, {"Connection", "close"}} {
+				if err := w.WriteHeader(h.Key, h.Value); err != nil {
+					return err
+				}
+			}
+			return w.StartBody()
+		},
+		4, // TODO(dfc) should be 1 once buffered
+	},
+	{
+		func(w *writer) error {
+			if err := w.WriteRequestLine("GET", "/foo", []string{"bar", "baz"}, HTTP_1_1.String()); err != nil {
+				return err
+			}
+			for _, h := range []Header{{"Host", "localhost"}, {"Connection", "close"}} {
+				if err := w.WriteHeader(h.Key, h.Value); err != nil {
+					return err
+				}
+			}
+			if err := w.StartBody(); err != nil {
+				return err
+			}
+			return w.WriteBody(strings.NewReader("Hello world!"))
+		},
+		5, // TODO(dfc) should be 2 once buffered
+	},
+}
+
+type countingWriter struct {
+	io.Writer
+	n int
+}
+
+func (w *countingWriter) Write(buf []byte) (int, error) {
+	w.n++
+	return w.Writer.Write(buf)
+}
+
+// verify that header buffering works
+func TestHeaderBuffering(t *testing.T) {
+	for _, tt := range headerBufferingTests {
+		cw := countingWriter{Writer: ioutil.Discard}
+		w := &writer{Writer: &cw}
+		if err := tt.f(w); err != nil {
+			t.Fatal(err)
+		}
+		if cw.n != tt.n {
+			t.Errorf("expected %d writes, got %d", tt.n, cw.n)
 		}
 	}
 }
