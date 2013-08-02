@@ -50,7 +50,7 @@ func (c *Client) Do(method, url string, headers map[string][]string, body io.Rea
 	if err != nil {
 		return client.Status{}, nil, nil, err
 	}
-	return resp.Status, nil, &readCloser{resp.Body, conn}, nil
+	return resp.Status, fromHeaders(resp.Headers), &readCloser{resp.Body, conn}, nil
 }
 
 // StatusError reprents a client.Status as an error.
@@ -83,6 +83,17 @@ func toHeaders(h map[string][]string) []client.Header {
 		for _, v := range v {
 			r = append(r, client.Header{k, v})
 		}
+	}
+	return r
+}
+
+func fromHeaders(h []client.Header) map[string][]string {
+	if h == nil {
+		return nil
+	}
+	var r = make(map[string][]string)
+	for _, hh := range h {
+		r[hh.Key] = append(r[hh.Key], hh.Value)
 	}
 	return r
 }
