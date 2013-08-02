@@ -233,6 +233,16 @@ var readResponseTests = []struct {
 		},
 		errors.New(`invalid header line: "HTTP/1.1 400 Bad Request\r\n"`),
 	},
+	// totally broken
+	{
+		"HTTP/1.0 301 Moved Permanently\r\n" +
+			"HTTP/1.0 400 Bad Request\r\n",
+		&Response{
+			Version: HTTP_1_0,
+			Status:  Status{301, "Moved Permanently"},
+		},
+		errors.New(`invalid header line: "HTTP/1.0 400 Bad Request\r\n"`),
+	},
 }
 
 func TestClientReadResponse(t *testing.T) {
