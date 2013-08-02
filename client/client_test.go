@@ -3,6 +3,7 @@ package client
 import (
 	"bufio"
 	"bytes"
+	"errors"
 	"io"
 	"reflect"
 	"strings"
@@ -209,6 +210,29 @@ var readResponseTests = []struct {
 		},
 		nil,
 	},
+	// silly redirect header
+	{
+		"HTTP/1.1 302 WebCenter Redirect\r\n" +
+			"Connection: close\r\n" +
+			"Date: Mon, 29 Jul 2013 22:18:39 GMT\r\n" +
+			"Location: http://kcsawsp01.contactcenter.ktb.co.th:80/\r\n" +
+			"HTTP/1.1 400 Bad Request\r\n" +
+			"Content-Type: text/html\r\n" +
+			"Content-Length: 87\r\n" +
+			"Connection: close\r\n" +
+			"\r\n" +
+			"<html><head><title>Error</title></head><body>The parameter is incorrect. </body></html>\n",
+		&Response{
+			Version: HTTP_1_1,
+			Status:  Status{302, "WebCenter Redirect"},
+			Headers: []Header{
+				{"Connection", "close"},
+				{"Date", "Mon, 29 Jul 2013 22:18:39 GMT"},
+				{"Location", "http://kcsawsp01.contactcenter.ktb.co.th:80/"},
+			},
+		},
+		errors.New(`invalid header line: "HTTP/1.1 400 Bad Request\r\n"`),
+	},
 }
 
 func TestClientReadResponse(t *testing.T) {
@@ -219,7 +243,7 @@ func TestClientReadResponse(t *testing.T) {
 			t.Errorf("client.ReadResponse(%q): expected %q %q, got %q %q", tt.data, tt.Response.Version, tt.Response.Status, resp.Version, resp.Status)
 			continue
 		}
-		if !reflect.DeepEqual(tt.Response.Headers, resp.Headers) || err != tt.err {
+		if !reflect.DeepEqual(tt.Response.Headers, resp.Headers) || !sameErr(err, tt.err) {
 			t.Errorf("client.ReadResponse(%q): expected %v %v, got %v %v", tt.data, tt.Response.Headers, tt.err, resp.Headers, err)
 		}
 		if err != nil {

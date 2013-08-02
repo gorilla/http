@@ -103,6 +103,8 @@ var readHeaderTests = []struct {
 	{"\r\n", "", "", true, nil},
 	{"Host: foo\n", "Host", "foo", false, nil},
 	{"Pragma: \r\n", "Pragma", "", false, nil},
+	// mangled response spotted in the wild
+	{"HTTP/1.0 200 OK\r\n", "", "", false, errors.New(`invalid header line: "HTTP/1.0 200 OK\r\n"`)},
 }
 
 func TestReadHeader(t *testing.T) {
