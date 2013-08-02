@@ -1,6 +1,7 @@
 package client
 
 import (
+	"bufio"
 	"bytes"
 	"io"
 	"io/ioutil"
@@ -57,6 +58,7 @@ func TestWriteRequestLine(t *testing.T) {
 		if err := c.WriteRequestLine(tt.method, tt.path, tt.query, tt.version); err != nil {
 			t.Fatalf("Conn.WriteRequestLine(%q, %q, %v %q): %v", tt.method, tt.path, tt.query, tt.version, err)
 		}
+		c.Writer.(*bufio.Writer).Flush()
 		if actual := b.String(); actual != tt.expected {
 			t.Errorf("Conn.WriteRequestLine(%q, %q, %v, %q): expected %q, got %q", tt.method, tt.path, tt.query, tt.version, tt.expected, actual)
 		}
@@ -99,7 +101,7 @@ func TestWriteHeader(t *testing.T) {
 
 func TestStartBody(t *testing.T) {
 	var b bytes.Buffer
-	c := &writer{Writer: &b}
+	c := &writer{Writer: bufio.NewWriter(&b), tmp: &b}
 	c.StartHeaders()
 	if err := c.WriteHeader("Host", "localhost"); err != nil {
 		t.Fatal(err)
@@ -120,12 +122,13 @@ func TestStartBody(t *testing.T) {
 }
 
 func TestDoubleWriteBody(t *testing.T) {
-	c := &writer{Writer: new(bytes.Buffer)}
+	var b bytes.Buffer
+	c := &writer{Writer: bufio.NewWriter(&b), tmp: &b}
 	c.StartBody()
-	if err := c.WriteBody(b("")); err != nil {
+	if err := c.WriteBody(strings.NewReader("")); err != nil {
 		t.Fatal(err)
 	}
-	err := c.WriteBody(b(""))
+	err := c.WriteBody(strings.NewReader(""))
 	expected := `phase error: expected body, got requestline`
 	if actual := err.Error(); actual != expected {
 		t.Fatalf("phaseError.Error(): expected %q, got %q", expected, actual)
@@ -133,12 +136,13 @@ func TestDoubleWriteBody(t *testing.T) {
 }
 
 func TestDoubleWriteChunked(t *testing.T) {
-	c := &writer{Writer: new(bytes.Buffer)}
+	var b bytes.Buffer
+	c := &writer{Writer: bufio.NewWriter(&b), tmp: &b}
 	c.StartBody()
-	if err := c.WriteChunked(b("")); err != nil {
+	if err := c.WriteChunked(strings.NewReader("")); err != nil {
 		t.Fatal(err)
 	}
-	err := c.WriteChunked(b(""))
+	err := c.WriteChunked(strings.NewReader(""))
 	expected := `phase error: expected body, got requestline`
 	if actual := err.Error(); actual != expected {
 		t.Fatalf("phaseError.Error(): expected %q, got %q", expected, actual)
@@ -176,7 +180,7 @@ func (c *writer) write(t *testing.T, w writeTest) {
 func TestWrite(t *testing.T) {
 	for _, tt := range writeTests {
 		var b bytes.Buffer
-		c := &writer{Writer: &b}
+		c := &writer{Writer: bufio.NewWriter(&b), tmp: &b}
 		c.write(t, tt)
 		if actual := b.String(); actual != tt.expected {
 			t.Errorf("TestWrite: expected %q, got %q", tt.expected, actual)
@@ -234,11 +238,38 @@ var headerBufferingTests = []struct {
 		func(w *writer) error {
 			return w.WriteRequestLine("GET", "/", nil, HTTP_1_1.String())
 		},
-		1,
+		0,
 	},
 	{
 		func(w *writer) error {
 			return w.WriteRequestLine("GET", "/foo", []string{"bar", "baz"}, HTTP_1_1.String())
+		},
+		0,
+	},
+	{
+		func(w *writer) error {
+			if err := w.WriteRequestLine("GET", "/foo", []string{"bar", "baz"}, HTTP_1_1.String()); err != nil {
+				return err
+			}
+			return w.WriteHeader("Host", "localhost")
+		},
+		0,
+	},
+	{
+		func(w *writer) error {
+			if err := w.WriteRequestLine("GET", "/", nil, HTTP_1_1.String()); err != nil {
+				return err
+			}
+			return w.StartBody()
+		},
+		1,
+	},
+	{
+		func(w *writer) error {
+			if err := w.WriteRequestLine("GET", "/foo", []string{"bar", "baz"}, HTTP_1_1.String()); err != nil {
+				return err
+			}
+			return w.StartBody()
 		},
 		1,
 	},
@@ -249,7 +280,19 @@ var headerBufferingTests = []struct {
 			}
 			return w.WriteHeader("Host", "localhost")
 		},
-		2, // TODO(dfc) should be 1 once buffered
+		0,
+	},
+	{
+		func(w *writer) error {
+			if err := w.WriteRequestLine("GET", "/foo", []string{"bar", "baz"}, HTTP_1_1.String()); err != nil {
+				return err
+			}
+			if err := w.WriteHeader("Host", "localhost"); err != nil {
+				return err
+			}
+			return w.StartBody()
+		},
+		1,
 	},
 	{
 		func(w *writer) error {
@@ -263,7 +306,7 @@ var headerBufferingTests = []struct {
 			}
 			return w.StartBody()
 		},
-		4, // TODO(dfc) should be 1 once buffered
+		1,
 	},
 	{
 		func(w *writer) error {
@@ -280,7 +323,7 @@ var headerBufferingTests = []struct {
 			}
 			return w.WriteBody(strings.NewReader("Hello world!"))
 		},
-		5, // TODO(dfc) should be 2 once buffered
+		2,
 	},
 }
 

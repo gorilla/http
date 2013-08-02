@@ -1,6 +1,7 @@
 package client
 
 import (
+	"bufio"
 	"fmt"
 	"io"
 	"net/http/httputil"
@@ -39,6 +40,7 @@ func (p *phaseError) Error() string {
 type writer struct {
 	phase
 	io.Writer
+	tmp io.Writer // used to hold the original writer during the headers phase.
 }
 
 // StartHeaders moves the Conn into the headers phase
@@ -53,6 +55,7 @@ func (w *writer) WriteRequestLine(method, path string, query []string, version s
 	if len(q) > 0 {
 		q = "?" + q
 	}
+	w.tmp, w.Writer = w.Writer, bufio.NewWriter(w.Writer)
 	_, err := fmt.Fprintf(w, "%s %s%s %s\r\n", method, path, q, version)
 	w.StartHeaders()
 	return err
@@ -69,8 +72,12 @@ func (w *writer) WriteHeader(key, value string) error {
 
 // StartBody moves the Conn into the body phase, no further headers may be sent at this point.
 func (w *writer) StartBody() error {
+	if _, err := w.Write([]byte("\r\n")); err != nil {
+		return err
+	}
+	err := w.Writer.(*bufio.Writer).Flush()
+	w.Writer, w.tmp = w.tmp, nil
 	w.phase = body
-	_, err := w.Write([]byte("\r\n"))
 	return err
 }
 
