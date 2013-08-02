@@ -230,6 +230,7 @@ var readResponseTests = []struct {
 				{"Date", "Mon, 29 Jul 2013 22:18:39 GMT"},
 				{"Location", "http://kcsawsp01.contactcenter.ktb.co.th:80/"},
 			},
+			Body: strings.NewReader("Content-Type: text/html\r\nContent-Length: 87\r\nConnection: close\r\n\r\n<html><head><title>Error</title></head><body>The parameter is incorrect. </body></html>\n"),
 		},
 		errors.New(`invalid header line: "HTTP/1.1 400 Bad Request\r\n"`),
 	},
@@ -243,20 +244,38 @@ var readResponseTests = []struct {
 		},
 		errors.New(`invalid header line: "HTTP/1.0 400 Bad Request\r\n"`),
 	},
+	// whitespace status code prefix
+	{
+		"HTTP/1.0  401 Unauthorized\r\n" +
+			"Content-type: text/html\r\n" +
+			"WWW-Authenticate: Basic realm=\"NXU-2\"\r\n" +
+			"<HTML><BODY><H1>Your Authentication failed<BR></H1><B>Your Request was denied <BR>You do not have permission to view this page</B><BR></BODY></HTML>",
+		&Response{
+			Version: HTTP_1_0,
+			Status:  Status{401, "Unauthorized"},
+		},
+		errors.New("ReadStatusLine: ReadStatusCode: expected ' ', got '1' at position 3"),
+	},
 }
 
 func TestClientReadResponse(t *testing.T) {
 	for _, tt := range readResponseTests {
 		client := &client{reader: reader{b(tt.data)}}
 		resp, err := client.ReadResponse()
-		if resp.Version != tt.Response.Version || resp.Status != tt.Response.Status {
-			t.Errorf("client.ReadResponse(%q): expected %q %q, got %q %q", tt.data, tt.Response.Version, tt.Response.Status, resp.Version, resp.Status)
+		if !sameErr(err, tt.err) {
+			t.Errorf("client.ReadResponse(%q): expected %q, got %q", tt.data, tt.err, err)
 			continue
 		}
-		if !reflect.DeepEqual(tt.Response.Headers, resp.Headers) || !sameErr(err, tt.err) {
-			t.Errorf("client.ReadResponse(%q): expected %v %v, got %v %v", tt.data, tt.Response.Headers, tt.err, resp.Headers, err)
+		if resp == nil {
+			continue
 		}
-		if err != nil {
+
+		if !reflect.DeepEqual(tt.Response.Headers, resp.Headers) {
+			t.Errorf("client.ReadResponse(%q): expected %v, got %v", tt.data, tt.Response.Headers, resp.Headers)
+			continue
+		}
+		if resp.Version != tt.Response.Version || resp.Status != tt.Response.Status {
+			t.Errorf("client.ReadResponse(%q): expected %q %q, got %q %q", tt.data, tt.Response.Version, tt.Response.Status, resp.Version, resp.Status)
 			continue
 		}
 		var buf bytes.Buffer
@@ -270,8 +289,8 @@ func TestClientReadResponse(t *testing.T) {
 			_, err = io.Copy(&buf, resp.Body)
 			actual = buf.String()
 		}
-		if actual != expected || err != tt.err {
-			t.Errorf("client.ReadResponse(%q): expected %q %v, got %q %v", tt.data, expected, tt.err, actual, err)
+		if actual != expected {
+			t.Errorf("client.ReadResponse(%q): expected %q, got %q", tt.data, expected, actual)
 		}
 	}
 }
