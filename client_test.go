@@ -68,6 +68,28 @@ var clientDoTests = []struct {
 		rheaders: map[string][]string{"Content-Length": []string{"8"}, "Content-Type": []string{"text/plain; charset=utf-8"}},
 		rbody:    strings.NewReader("Created\n"),
 	},
+	{
+		method: "GET",
+		path:   "/301",
+		Status: client.Status{301, "Moved Permanently"},
+		rheaders: map[string][]string{
+			"Location":       []string{"/200"},
+			"Content-Length": []string{"39"},
+			"Content-Type":   []string{"text/html; charset=utf-8"},
+		},
+		rbody: strings.NewReader("<a href=\"/200\">Moved Permanently</a>.\n\n"),
+	},
+	{
+		method: "GET",
+		path:   "/302",
+		Status: client.Status{302, "Found"},
+		rheaders: map[string][]string{
+			"Location":       []string{"/200"},
+			"Content-Length": []string{"27"},
+			"Content-Type":   []string{"text/html; charset=utf-8"},
+		},
+		rbody: strings.NewReader("<a href=\"/200\">Found</a>.\n\n"),
+	},
 }
 
 func stdmux() *http.ServeMux {
@@ -94,6 +116,12 @@ func stdmux() *http.ServeMux {
 		} else {
 			http.Error(w, "Created", 201)
 		}
+	})
+	mux.HandleFunc("/301", func(w http.ResponseWriter, r *http.Request) {
+		http.Redirect(w, r, "200", 301)
+	})
+	mux.HandleFunc("/302", func(w http.ResponseWriter, r *http.Request) {
+		http.Redirect(w, r, "200", 302)
 	})
 	return mux
 }
