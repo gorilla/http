@@ -13,6 +13,9 @@ import (
 // to as many end points as required.
 type Client struct {
 	dialer Dialer
+
+	// FollowRedirects instructs the client to follow 301/302 redirects when idempotent.
+	FollowRedirects bool
 }
 
 // Do sends an HTTP request and returns an HTTP response. If the response body is non nil

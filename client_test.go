@@ -16,6 +16,7 @@ import (
 const postBody = "banananana"
 
 var clientDoTests = []struct {
+	Client
 	// arguments
 	method, path string
 	headers      map[string][]string
@@ -27,6 +28,8 @@ var clientDoTests = []struct {
 	err      error
 }{
 	{
+
+		Client:   Client{dialer: new(dialer)},
 		method:   "GET",
 		path:     "/200",
 		Status:   client.Status{200, "OK"},
@@ -34,6 +37,7 @@ var clientDoTests = []struct {
 		rbody:    strings.NewReader("OK"),
 	},
 	{
+		Client:   Client{dialer: new(dialer)},
 		method:   "GET",
 		path:     "/404",
 		Status:   client.Status{404, "Not Found"},
@@ -41,6 +45,7 @@ var clientDoTests = []struct {
 		rbody:    strings.NewReader("404 page not found\n"),
 	},
 	{
+		Client:   Client{dialer: new(dialer)},
 		method:   "GET",
 		path:     "/a",
 		Status:   client.Status{200, "OK"},
@@ -48,6 +53,7 @@ var clientDoTests = []struct {
 		rbody:    strings.NewReader(a()),
 	},
 	{
+		Client:  Client{dialer: new(dialer)},
 		method:  "GET",
 		path:    "/a",
 		Status:  client.Status{200, "OK"},
@@ -61,6 +67,7 @@ var clientDoTests = []struct {
 		rbody: strings.NewReader(a()),
 	},
 	{
+		Client:   Client{dialer: new(dialer)},
 		method:   "POST",
 		path:     "/201",
 		body:     func() io.Reader { return strings.NewReader(postBody) },
@@ -69,6 +76,7 @@ var clientDoTests = []struct {
 		rbody:    strings.NewReader("Created\n"),
 	},
 	{
+		Client: Client{dialer: new(dialer)},
 		method: "GET",
 		path:   "/301",
 		Status: client.Status{301, "Moved Permanently"},
@@ -80,6 +88,7 @@ var clientDoTests = []struct {
 		rbody: strings.NewReader("<a href=\"/200\">Moved Permanently</a>.\n\n"),
 	},
 	{
+		Client: Client{dialer: new(dialer)},
 		method: "GET",
 		path:   "/302",
 		Status: client.Status{302, "Found"},
@@ -130,13 +139,12 @@ func TestClientDo(t *testing.T) {
 	s := newServer(t, stdmux())
 	defer s.Shutdown()
 	for _, tt := range clientDoTests {
-		c := &Client{new(dialer)}
 		url := s.Root() + tt.path
 		var body io.Reader
 		if tt.body != nil {
 			body = tt.body()
 		}
-		status, headers, rbody, err := c.Do(tt.method, url, tt.headers, body)
+		status, headers, rbody, err := tt.Client.Do(tt.method, url, tt.headers, body)
 		if err != tt.err {
 			t.Errorf("Client.Do(%q, %q, %v, %v): err expected %v, got %v", tt.method, tt.path, tt.headers, tt.body, tt.err, err)
 		}
@@ -193,7 +201,7 @@ func TestClientGet(t *testing.T) {
 	s := newServer(t, stdmux())
 	defer s.Shutdown()
 	for _, tt := range clientGetTests {
-		c := &Client{new(dialer)}
+		c := &Client{dialer: new(dialer)}
 		url := s.Root() + tt.path
 		status, _, _, err := c.Get(url, tt.headers)
 		if err != tt.err {
@@ -229,7 +237,7 @@ func TestClientPost(t *testing.T) {
 	s := newServer(t, stdmux())
 	defer s.Shutdown()
 	for _, tt := range clientPostTests {
-		c := &Client{new(dialer)}
+		c := &Client{dialer: new(dialer)}
 		url := s.Root() + tt.path
 		var body io.Reader
 		if tt.body != nil {

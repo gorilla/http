@@ -19,7 +19,10 @@ import (
 // It's defaults are expected to represent the best practice
 // at the time, but may change over time. If you need more
 // control or reproducibility, you should construct your own client.
-var DefaultClient = Client{dialer: &dialer{}}
+var DefaultClient = Client{
+	dialer:          new(dialer),
+	FollowRedirects: true,
+}
 
 // Get issues a GET request using the DefaultClient and writes the result to
 // to w if successful. If the status code of the response is not a success (see
