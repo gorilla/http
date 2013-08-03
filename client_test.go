@@ -99,6 +99,22 @@ var clientDoTests = []struct {
 		},
 		rbody: strings.NewReader("<a href=\"/200\">Found</a>.\n\n"),
 	},
+	{
+		Client:   Client{dialer: new(dialer), FollowRedirects: true},
+		method:   "GET",
+		path:     "/301",
+		Status:   client.Status{200, "OK"},
+		rheaders: map[string][]string{"Content-Length": []string{"2"}, "Content-Type": []string{"text/plain; charset=utf-8"}},
+		rbody:    strings.NewReader("OK"),
+	},
+	{
+		Client:   Client{dialer: new(dialer), FollowRedirects: true},
+		method:   "GET",
+		path:     "/302",
+		Status:   client.Status{200, "OK"},
+		rheaders: map[string][]string{"Content-Length": []string{"2"}, "Content-Type": []string{"text/plain; charset=utf-8"}},
+		rbody:    strings.NewReader("OK"),
+	},
 }
 
 func stdmux() *http.ServeMux {

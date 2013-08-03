@@ -2,7 +2,9 @@ package http
 
 import (
 	"compress/gzip"
+	"fmt"
 	"io"
+	"io/ioutil"
 	stdurl "net/url"
 	"strings"
 
@@ -55,14 +57,26 @@ func (c *Client) Do(method, url string, headers map[string][]string, body io.Rea
 	if err != nil {
 		return client.Status{}, nil, nil, err
 	}
-	headers = fromHeaders(resp.Headers)
-	body = resp.Body
-	if h, ok := headers["Content-Encoding"]; ok {
-		if len(h) > 0 && h[0] == "gzip" {
-			body, err = gzip.NewReader(body)
-		}
+	rheaders := fromHeaders(resp.Headers)
+	rbody := resp.Body
+	if h := strings.Join(rheaders["Content-Encoding"], " "); h == "gzip" {
+		rbody, err = gzip.NewReader(rbody)
 	}
-	return resp.Status, headers, &readCloser{body, conn}, err
+	rc := &readCloser{rbody, conn}
+	if resp.Status.IsRedirect() && c.FollowRedirects {
+		// consume the response body
+		_, err := io.Copy(ioutil.Discard, rc)
+		err2 := rc.Close()
+		if err != nil || err2 != nil {
+			return client.Status{}, nil, nil, err // TODO
+		}
+		loc := strings.Join(rheaders["Location"], " ")
+		if strings.HasPrefix(loc, "/") {
+			loc = fmt.Sprintf("http://%s%s", host, loc)
+		}
+		return c.Do(method, loc, headers, body)
+	}
+	return resp.Status, rheaders, rc, err
 }
 
 // StatusError reprents a client.Status as an error.
