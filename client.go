@@ -43,7 +43,7 @@ func (c *Client) Do(method, url string, headers map[string][]string, body io.Rea
 	if err != nil {
 		return client.Status{}, nil, nil, err
 	}
-	req := toRequest(method, path, nil, client.HTTP_1_1, headers, body)
+	req := toRequest(method, path, nil, headers, body)
 	if err := conn.WriteRequest(req); err != nil {
 		return client.Status{}, nil, nil, err
 	}
@@ -97,12 +97,12 @@ func (c *Client) Post(url string, headers map[string][]string, body io.Reader) (
 	return c.Do("POST", url, headers, body)
 }
 
-func toRequest(method string, path string, query []string, version client.Version, headers map[string][]string, body io.Reader) *client.Request {
+func toRequest(method string, path string, query []string, headers map[string][]string, body io.Reader) *client.Request {
 	return &client.Request{
 		Method:  method,
 		Path:    path,
 		Query:   query,
-		Version: version,
+		Version: client.HTTP_1_1,
 		Headers: toHeaders(headers),
 		Body:    body,
 	}
