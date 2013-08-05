@@ -330,6 +330,7 @@ var fromResponseTests = []struct {
 	*client.Response
 	client.Version
 	client.Status
+	body    io.Reader
 	headers map[string][]string
 }{
 // TODO(dfc)
@@ -337,7 +338,7 @@ var fromResponseTests = []struct {
 
 func TestFromResponse(t *testing.T) {
 	for _, tt := range fromResponseTests {
-		version, status, headers, _ := fromResponse(tt.Response)
+		version, status, headers, body := fromResponse(tt.Response)
 		if version != tt.Version {
 			t.Errorf("fromRequest(%q): version: expected %v, got %v", tt.Response, tt.Version, version)
 		}
@@ -347,5 +348,20 @@ func TestFromResponse(t *testing.T) {
 		if !reflect.DeepEqual(headers, tt.headers) {
 			t.Errorf("fromRequest(%q): headers: expected %v, got %v", tt.Response, tt.headers, headers)
 		}
+		if same, actual, expected := sameBody(t, body, tt.body); !same {
+			t.Errorf("fromRequest(%q): body: expected %q, got %q", tt.Response, expected, actual)
+		}
 	}
+}
+
+// sameBody consumes both bodies.
+func sameBody(t *testing.T, a, b io.Reader) (bool, string, string) {
+	var A, B bytes.Buffer
+	if _, err := io.Copy(&A, a); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := io.Copy(&B, b); err != nil {
+		t.Fatal(err)
+	}
+	return bytes.Equal(A.Bytes(), B.Bytes()), A.String(), B.String()
 }
