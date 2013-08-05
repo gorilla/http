@@ -31,10 +31,10 @@ func (c *Client) Do(method, url string, headers map[string][]string, body io.Rea
 		return client.Status{}, nil, nil, err
 	}
 	host := u.Host
+	headers["Host"] = []string{host}
 	if !strings.Contains(host, ":") {
 		host += ":80"
 	}
-	headers["Host"] = []string{host}
 	path := u.Path
 	if path == "" {
 		path = "/"
