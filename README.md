@@ -69,7 +69,7 @@ responsible for the http transaction and the lowest level wire format.
 ## Robustness and correctness
 
 As a client only package, `gorilla/http` has flexibility to bias correctness over performance. Gorilla will always
-favor correctness of implemetantion over performance, and we believe this is the correct trade off. Having said that
+favor correctness of implementation over performance, and we believe this is the correct trade off. Having said that
 performance is a feature and `gorilla/http` strives to keep its overheads compared to the underlying network transit
 cost as low as possible.
 
