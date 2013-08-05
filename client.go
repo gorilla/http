@@ -51,13 +51,12 @@ func (c *Client) Do(method, url string, headers map[string][]string, body io.Rea
 	if err != nil {
 		return client.Status{}, nil, nil, err
 	}
-	rheaders := fromHeaders(resp.Headers)
-	rbody := resp.Body
+	_, rstatus, rheaders, rbody := fromResponse(resp)
 	if h := strings.Join(rheaders["Content-Encoding"], " "); h == "gzip" {
 		rbody, err = gzip.NewReader(rbody)
 	}
 	rc := &readCloser{rbody, conn}
-	if resp.Status.IsRedirect() && c.FollowRedirects {
+	if rstatus.IsRedirect() && c.FollowRedirects {
 		// consume the response body
 		_, err := io.Copy(ioutil.Discard, rc)
 		err2 := rc.Close()
@@ -70,7 +69,7 @@ func (c *Client) Do(method, url string, headers map[string][]string, body io.Rea
 		}
 		return c.Do(method, loc, headers, body)
 	}
-	return resp.Status, rheaders, rc, err
+	return rstatus, rheaders, rc, err
 }
 
 // StatusError reprents a client.Status as an error.
@@ -106,6 +105,12 @@ func toRequest(method string, path string, query []string, headers map[string][]
 		Headers: toHeaders(headers),
 		Body:    body,
 	}
+}
+
+func fromResponse(resp *client.Response) (client.Version, client.Status, map[string][]string, io.Reader) {
+	body := resp.Body
+	headers := fromHeaders(resp.Headers)
+	return resp.Version, resp.Status, headers, body
 }
 
 func toHeaders(h map[string][]string) []client.Header {

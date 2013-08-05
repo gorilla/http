@@ -325,3 +325,27 @@ func sameRequest(a, b *client.Request) bool {
 	}
 	return reflect.DeepEqual(a.Headers, b.Headers)
 }
+
+var fromResponseTests = []struct {
+	*client.Response
+	client.Version
+	client.Status
+	headers map[string][]string
+}{
+// TODO(dfc)
+}
+
+func TestFromResponse(t *testing.T) {
+	for _, tt := range fromResponseTests {
+		version, status, headers, _ := fromResponse(tt.Response)
+		if version != tt.Version {
+			t.Errorf("fromRequest(%q): version: expected %v, got %v", tt.Response, tt.Version, version)
+		}
+		if status != tt.Status {
+			t.Errorf("fromRequest(%q): status: expected %v, got %v", tt.Response, tt.Status, status)
+		}
+		if !reflect.DeepEqual(headers, tt.headers) {
+			t.Errorf("fromRequest(%q): headers: expected %v, got %v", tt.Response, tt.headers, headers)
+		}
+	}
+}
