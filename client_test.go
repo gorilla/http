@@ -285,3 +285,44 @@ func TestStatusError(t *testing.T) {
 		}
 	}
 }
+
+var toRequestTests = []struct {
+	method, path string
+	query        []string
+	client.Version
+	headers map[string][]string
+	*client.Request
+}{
+	{
+		"GET", "/", nil, client.HTTP_1_1, nil, &client.Request{
+			Method:  "GET",
+			Path:    "/",
+			Version: client.HTTP_1_1,
+		},
+	},
+}
+
+func TestToRequest(t *testing.T) {
+	for _, tt := range toRequestTests {
+		actual := toRequest(tt.method, tt.path, tt.query, tt.Version, tt.headers, nil) // don't check body
+		if !sameRequest(tt.Request, actual) {
+			t.Errorf("toRequest(%q, %q, %q, %q, %q): expected %q, got %q", tt.method, tt.path, tt.query, tt.Version, tt.headers, tt.Request, actual)
+		}
+	}
+}
+
+func sameRequest(a, b *client.Request) bool {
+	if a.Method != b.Method {
+		return false
+	}
+	if a.Path != b.Path {
+		return false
+	}
+	if !reflect.DeepEqual(a.Query, b.Query) {
+		return false
+	}
+	if a.Version != b.Version {
+		return false
+	}
+	return reflect.DeepEqual(a.Headers, b.Headers)
+}

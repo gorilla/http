@@ -31,10 +31,10 @@ func (c *Client) Do(method, url string, headers map[string][]string, body io.Rea
 		return client.Status{}, nil, nil, err
 	}
 	host := u.Host
-	headers["Host"] = []string{host}
 	if !strings.Contains(host, ":") {
 		host += ":80"
 	}
+	headers["Host"] = []string{host}
 	path := u.Path
 	if path == "" {
 		path = "/"
@@ -43,14 +43,8 @@ func (c *Client) Do(method, url string, headers map[string][]string, body io.Rea
 	if err != nil {
 		return client.Status{}, nil, nil, err
 	}
-	req := client.Request{
-		Method:  method,
-		Path:    path,
-		Version: client.HTTP_1_1,
-		Body:    body,
-		Headers: toHeaders(headers),
-	}
-	if err := conn.WriteRequest(&req); err != nil {
+	req := toRequest(method, path, nil, client.HTTP_1_1, headers, body)
+	if err := conn.WriteRequest(req); err != nil {
 		return client.Status{}, nil, nil, err
 	}
 	resp, err := conn.ReadResponse()
@@ -101,6 +95,17 @@ func (c *Client) Get(url string, headers map[string][]string) (client.Status, ma
 // Post sends a POST request, suppling the contents of the reader as the request body.
 func (c *Client) Post(url string, headers map[string][]string, body io.Reader) (client.Status, map[string][]string, io.ReadCloser, error) {
 	return c.Do("POST", url, headers, body)
+}
+
+func toRequest(method string, path string, query []string, version client.Version, headers map[string][]string, body io.Reader) *client.Request {
+	return &client.Request{
+		Method:  method,
+		Path:    path,
+		Query:   query,
+		Version: version,
+		Headers: toHeaders(headers),
+		Body:    body,
+	}
 }
 
 func toHeaders(h map[string][]string) []client.Header {
