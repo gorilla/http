@@ -59,8 +59,7 @@ func (c *Client) Do(method, url string, headers map[string][]string, body io.Rea
 	if rstatus.IsRedirect() && c.FollowRedirects {
 		// consume the response body
 		_, err := io.Copy(ioutil.Discard, rc)
-		err2 := rc.Close()
-		if err != nil || err2 != nil {
+		if err := firstErr(err, rc.Close()); err != nil {
 			return client.Status{}, nil, nil, err // TODO
 		}
 		loc := headerValue(rheaders, "Location")
@@ -136,4 +135,14 @@ func fromHeaders(h []client.Header) map[string][]string {
 
 func headerValue(headers map[string][]string, key string) string {
 	return strings.Join(headers[key], " ")
+}
+
+func firstErr(err1, err2 error) error {
+	if err1 != nil {
+		return err1
+	}
+	if err2 != nil {
+		return err2
+	}
+	return nil
 }

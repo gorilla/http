@@ -3,6 +3,7 @@ package http
 import (
 	"bytes"
 	"compress/gzip"
+	"errors"
 	"fmt"
 	"io"
 	"net/http"
@@ -367,52 +368,52 @@ func sameBody(t *testing.T, a, b io.Reader) (bool, string, string) {
 }
 
 var headerValueTests = []struct {
-	headers map[string][]string
+	headers       map[string][]string
 	key, expected string
-} {
+}{
 	{
-		key: "foo",
+		key:      "foo",
 		expected: "",
 	},
 	{
-		headers: make(map[string][]string),
-		key: "foo",
+		headers:  make(map[string][]string),
+		key:      "foo",
 		expected: "",
 	},
 	{
-		headers: map[string][]string{ 
+		headers: map[string][]string{
 			"foo": nil,
 		},
-		key: "foo",
+		key:      "foo",
 		expected: "",
 	},
-        {
-                headers: map[string][]string{ 
-                        "bar": []string{"baz"},
-                },
-                key: "foo",
-                expected: "",
-        },
-        {
-                headers: map[string][]string{ 
-                        "foo": []string{"baz"},
-                },
-                key: "foo",
-                expected: "baz",
+	{
+		headers: map[string][]string{
+			"bar": []string{"baz"},
+		},
+		key:      "foo",
+		expected: "",
 	},
-        {
-                headers: map[string][]string{ 
-                        "foo": []string{"baz", "quzz"},
-                },
-                key: "foo",
-                expected: "baz quzz",
+	{
+		headers: map[string][]string{
+			"foo": []string{"baz"},
+		},
+		key:      "foo",
+		expected: "baz",
 	},
-        {
-                headers: map[string][]string{ 
-                        "foo": []string{"baz", ""},
-                },
-                key: "foo",
-                expected: "baz ", // odd
+	{
+		headers: map[string][]string{
+			"foo": []string{"baz", "quzz"},
+		},
+		key:      "foo",
+		expected: "baz quzz",
+	},
+	{
+		headers: map[string][]string{
+			"foo": []string{"baz", ""},
+		},
+		key:      "foo",
+		expected: "baz ", // odd
 	},
 }
 
@@ -420,7 +421,26 @@ func TestHeaderValue(t *testing.T) {
 	for _, tt := range headerValueTests {
 		actual := headerValue(tt.headers, tt.key)
 		if actual != tt.expected {
-			t.Errorf("HeaderValue(%v, %q): expected %q, got %q", tt.headers, tt.key, tt.expected, actual)
+			t.Errorf("headerValue(%v, %q): expected %q, got %q", tt.headers, tt.key, tt.expected, actual)
+		}
+	}
+}
+
+var firstErrTests = []struct {
+	err1, err2 error
+	expected   error
+}{
+	{nil, nil, nil},
+	{io.EOF, nil, io.EOF},
+	{nil, io.EOF, io.EOF},
+	{io.EOF, errors.New("yowzer"), io.EOF},
+}
+
+func TestFirstErr(t *testing.T) {
+	for _, tt := range firstErrTests {
+		actual := firstErr(tt.err1, tt.err2)
+		if !sameErr(actual, tt.expected) {
+			t.Errorf("firstErr(%v, %v): expected %v, got %v", tt.err1, tt.err2, tt.expected, actual)
 		}
 	}
 }
