@@ -365,3 +365,62 @@ func sameBody(t *testing.T, a, b io.Reader) (bool, string, string) {
 	}
 	return bytes.Equal(A.Bytes(), B.Bytes()), A.String(), B.String()
 }
+
+var headerValueTests = []struct {
+	headers map[string][]string
+	key, expected string
+} {
+	{
+		key: "foo",
+		expected: "",
+	},
+	{
+		headers: make(map[string][]string),
+		key: "foo",
+		expected: "",
+	},
+	{
+		headers: map[string][]string{ 
+			"foo": nil,
+		},
+		key: "foo",
+		expected: "",
+	},
+        {
+                headers: map[string][]string{ 
+                        "bar": []string{"baz"},
+                },
+                key: "foo",
+                expected: "",
+        },
+        {
+                headers: map[string][]string{ 
+                        "foo": []string{"baz"},
+                },
+                key: "foo",
+                expected: "baz",
+	},
+        {
+                headers: map[string][]string{ 
+                        "foo": []string{"baz", "quzz"},
+                },
+                key: "foo",
+                expected: "baz quzz",
+	},
+        {
+                headers: map[string][]string{ 
+                        "foo": []string{"baz", ""},
+                },
+                key: "foo",
+                expected: "baz ", // odd
+	},
+}
+
+func TestHeaderValue(t *testing.T) {
+	for _, tt := range headerValueTests {
+		actual := headerValue(tt.headers, tt.key)
+		if actual != tt.expected {
+			t.Errorf("HeaderValue(%v, %q): expected %q, got %q", tt.headers, tt.key, tt.expected, actual)
+		}
+	}
+}

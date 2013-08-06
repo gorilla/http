@@ -52,7 +52,7 @@ func (c *Client) Do(method, url string, headers map[string][]string, body io.Rea
 		return client.Status{}, nil, nil, err
 	}
 	_, rstatus, rheaders, rbody := fromResponse(resp)
-	if h := strings.Join(rheaders["Content-Encoding"], " "); h == "gzip" {
+	if headerValue(rheaders, "Content-Encoding") == "gzip" {
 		rbody, err = gzip.NewReader(rbody)
 	}
 	rc := &readCloser{rbody, conn}
@@ -63,7 +63,7 @@ func (c *Client) Do(method, url string, headers map[string][]string, body io.Rea
 		if err != nil || err2 != nil {
 			return client.Status{}, nil, nil, err // TODO
 		}
-		loc := strings.Join(rheaders["Location"], " ")
+		loc := headerValue(rheaders, "Location")
 		if strings.HasPrefix(loc, "/") {
 			loc = fmt.Sprintf("http://%s%s", host, loc)
 		}
@@ -132,4 +132,8 @@ func fromHeaders(h []client.Header) map[string][]string {
 		r[hh.Key] = append(r[hh.Key], hh.Value)
 	}
 	return r
+}
+
+func headerValue(headers map[string][]string, key string) string {
+	return strings.Join(headers[key], " ")
 }
