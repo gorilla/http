@@ -3,6 +3,7 @@ package http
 import (
 	"io"
 	"net"
+	"sync"
 	"time"
 
 	"github.com/gorilla/http/client"
@@ -15,9 +16,23 @@ type Dialer interface {
 }
 
 type dialer struct {
+	sync.Mutex                   // protects following fields
+	conns      map[string][]Conn // maps addr to a, possibly empty, slice of existing Conns
 }
 
 func (d *dialer) Dial(network, addr string) (Conn, error) {
+	d.Lock()
+	defer d.Unlock()
+	if d.conns == nil {
+		d.conns = make(map[string][]Conn)
+	}
+	if c, ok := d.conns[addr]; ok {
+		if len(c) > 0 {
+			conn := c[0]
+			c[0], c = c[len(c)-1], c[:len(c)-1]
+			return conn, nil
+		}
+	}
 	c, err := net.Dial(network, addr)
 	return &conn{
 		Client: client.NewClient(c),
@@ -35,10 +50,20 @@ type Conn interface {
 	SetDeadline(time.Time) error
 	SetReadDeadline(time.Time) error
 	SetWriteDeadline(time.Time) error
+
+	// Release returns the Conn to the Dialer for reuse.
+	Release()
 }
 
 type conn struct {
 	client.Client
 	net.Conn
 	*dialer
+}
+
+func (c *conn) Release() {
+	c.dialer.Lock()
+	defer c.dialer.Unlock()
+	addr := c.Conn.RemoteAddr().String()
+	c.dialer.conns[addr] = append(c.dialer.conns[addr], c)
 }
