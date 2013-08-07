@@ -71,6 +71,7 @@ var getTests = []struct {
 	err      error
 }{
 	{"/200", "OK", nil},
+	{"/%2f", "", errors.New("404 Not Found")}, // issue #1
 	{"/404", "", errors.New("404 Not Found")},
 	{"/a", a(), nil}, // triggers chunked encoding
 }
