@@ -22,7 +22,6 @@ type dialer struct {
 
 func (d *dialer) Dial(network, addr string) (Conn, error) {
 	d.Lock()
-	defer d.Unlock()
 	if d.conns == nil {
 		d.conns = make(map[string][]Conn)
 	}
@@ -30,9 +29,11 @@ func (d *dialer) Dial(network, addr string) (Conn, error) {
 		if len(c) > 0 {
 			conn := c[0]
 			c[0], c = c[len(c)-1], c[:len(c)-1]
+			d.Unlock()
 			return conn, nil
 		}
 	}
+	d.Unlock()
 	c, err := net.Dial(network, addr)
 	return &conn{
 		Client: client.NewClient(c),
