@@ -22,6 +22,7 @@ func (d *dialer) Dial(network, addr string) (Conn, error) {
 	return &conn{
 		Client: client.NewClient(c),
 		Conn:   c,
+		dialer: d,
 	}, err
 }
 
@@ -39,4 +40,5 @@ type Conn interface {
 type conn struct {
 	client.Client
 	net.Conn
+	*dialer
 }
