@@ -38,6 +38,33 @@ var clientDoTests = []struct {
 		rbody:    strings.NewReader("OK"),
 	},
 	{
+
+		Client:   Client{dialer: new(dialer)},
+		method:   "GET",
+		path:     "/query1?a=1",
+		Status:   client.Status{200, "OK"},
+		rheaders: map[string][]string{"Content-Length": []string{"3"}, "Content-Type": []string{"text/plain; charset=utf-8"}},
+		rbody:    strings.NewReader("a=1"),
+	},
+	/** {
+
+	        Client:   Client{dialer: new(dialer)},
+	        method:   "GET",
+	        path:     "/query1?a=1#ignored", // fragment should be ignored
+	        Status:   client.Status{200, "OK"},
+	        rheaders: map[string][]string{"Content-Length": []string{"3"}, "Content-Type": []string{"text/plain; charset=utf-8"}},
+	        rbody:    strings.NewReader("a=1"),
+	},     **/
+	{
+
+		Client:   Client{dialer: new(dialer)},
+		method:   "GET",
+		path:     "/query2?a=1&b=2",
+		Status:   client.Status{200, "OK"},
+		rheaders: map[string][]string{"Content-Length": []string{"7"}, "Content-Type": []string{"text/plain; charset=utf-8"}},
+		rbody:    strings.NewReader("a=1&b=2"),
+	},
+	{
 		Client:   Client{dialer: new(dialer)},
 		method:   "GET",
 		path:     "/404",
@@ -148,6 +175,22 @@ func stdmux() *http.ServeMux {
 	})
 	mux.HandleFunc("/302", func(w http.ResponseWriter, r *http.Request) {
 		http.Redirect(w, r, "200", 302)
+	})
+	mux.HandleFunc("/query1", func(w http.ResponseWriter, r *http.Request) {
+		rq := r.URL.RawQuery
+		if rq != "a=1" {
+			http.Error(w, "Bad Request", 400)
+			return
+		}
+		w.Write([]byte(rq))
+	})
+	mux.HandleFunc("/query2", func(w http.ResponseWriter, r *http.Request) {
+		rq := r.URL.RawQuery
+		if rq != "a=1&b=2" {
+			http.Error(w, "Bad Request", 400)
+			return
+		}
+		w.Write([]byte(rq))
 	})
 	return mux
 }

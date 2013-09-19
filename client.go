@@ -39,6 +39,9 @@ func (c *Client) Do(method, url string, headers map[string][]string, body io.Rea
 	if path == "" {
 		path = "/"
 	}
+	if u.RawQuery != "" {
+		path += "?" + u.RawQuery
+	}
 	conn, err := c.dialer.Dial("tcp", host)
 	if err != nil {
 		return client.Status{}, nil, nil, err
