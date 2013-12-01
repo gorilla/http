@@ -2,7 +2,7 @@
 
 A simple, safe and powerful HTTP client for the Go language.
 
-Build Status: [![Build Status](https://drone.io/github.com/gorilla/http/status.png)](https://drone.io/github.com/gorilla/http/latest)
+Build Status: [![Build Status](https://travis-ci.org/gorilla/http.png?branch=master)](https://travis-ci.org/gorilla/http)
 
 # Image of an under construction GIF
 
