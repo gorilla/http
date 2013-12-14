@@ -30,7 +30,7 @@ lead to compromises.
 `gorilla/http` is a client implementation only. This allows us to focus on a set of layered types which encapsulate the
 complete request flow from the client point of view without compromise.
 
-# Specific featues
+# Specific features
 
 This section addresses specific limitations of the `net/http` package and discusses the `gorilla/http` alternatives.
 
@@ -38,7 +38,7 @@ This section addresses specific limitations of the `net/http` package and discus
 
 Timeouts are critically important. By dint of the Go 1 contract, timeouts have been bolted on to the `net/http`
 implementation where possible. `gorilla/http` will go further and implement timeouts for as many operations as
-possible; connection, request send, reponse headers, response body, total request/response time, keepalive, etc.
+possible; connection, request send, response headers, response body, total request/response time, keepalive, etc.
 
 ## Closing Response Bodies
 
@@ -50,13 +50,13 @@ Instead `gorilla/http` will address this in two ways
  1. The high level functions in the `gorilla/http` package do not return types that require closing. For example,
 `gorilla/http.Get(w io.Writer, url string)` mirrors the interface of `io.Copy` and should be sufficient for many
 REST style http calls which exchange small messages.
- 2. A the `http.Client` layer, methods will return an `io.ReadCloser`, not a complex `Response` type. This
+ 2. At the `http.Client` layer, methods will return an `io.ReadCloser`, not a complex `Response` type. This
 `io.ReadCloser` *must* be closed before falling out of scope otherwise the client will panic the application.
 
 ## Connection rate limiting
 
 Rate limiting in terms of number of total connections in use, number of connections to a particular site will
-be controllable. By default `gorilla/http` will only use a reasonable number of concurent connections.
+be controllable. By default `gorilla/http` will only use a reasonable number of concurrent connections.
 
 `gorilla/http` has a strictly layered design where the high level `gorilla/http` package is responsible for
 request composition and connection management and the lower level `gorilla/http/client` package is strictly
@@ -85,7 +85,7 @@ Questions and discussion can also be directed to the general Gorilla mailing lis
 
 # Technical information
 
-`gorilla/http` is divided into 4 layers. The top most layer is a set of convenience functions layered on top of a
+`gorilla/http` is divided into 4 layers. The topmost layer is a set of convenience functions layered on top of a
 default `gorilla/http.Client` instance. These package level functions are intended to satisfy simple HTTP requests
 and only cover the most common verbs and use cases.
 
