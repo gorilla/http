@@ -20,7 +20,7 @@ import (
 // at the time, but may change over time. If you need more
 // control or reproducibility, you should construct your own client.
 var DefaultClient = Client{
-	dialer:          new(dialer),
+	Dialer:          DefaultCachingDialer,
 	FollowRedirects: true,
 }
 
