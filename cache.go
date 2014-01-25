@@ -15,6 +15,8 @@ type cachingDialer struct {
 	straightDialer Dialer
 }
 
+// NewCachingDialer takes an existing dialer and essentially memoizes the Dial
+// method with inactive connections.
 func NewCachingDialer(d Dialer) Dialer {
 	return &cachingDialer{
 		conns:          make(map[connKey][]Conn),
@@ -49,9 +51,11 @@ type cachedConn struct {
 }
 
 func (c *cachedConn) Release() {
+	c.Conn.Release()
 	c.cachingDialer.Lock()
 	defer c.cachingDialer.Unlock()
 	c.cachingDialer.conns[c.key] = append(c.cachingDialer.conns[c.key], c)
 }
 
+// DefaultCachingDialer is simply the DefaultDialer wrapped with a cache.
 var DefaultCachingDialer = NewCachingDialer(DefaultDialer)

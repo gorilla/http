@@ -44,7 +44,12 @@ type dialer struct {
 	config tls.Config
 }
 
+// DefaultDialer is a non-caching dialer for a Client. It is strict with HTTPS
+// certificates
 var DefaultDialer = dialer{}
+
+// InsecureDialer is a non-caching dialer for a Client. It does not verify
+// peer certificates nor does it validate hostnames.
 var InsecureDialer = dialer{config: tls.Config{InsecureSkipVerify: true}}
 
 func (d dialer) Dial(scheme, host string) (Conn, error) {
