@@ -8,6 +8,7 @@ import (
 	"io"
 	"net/http"
 	"reflect"
+	"sort"
 	"strings"
 	"testing"
 
@@ -214,7 +215,11 @@ func TestClientDo(t *testing.T) {
 		if status != tt.Status {
 			t.Errorf("Client.Do(%q, %q, %v, %v): status expected %v, got %v", tt.method, tt.path, tt.headers, tt.body, tt.Status, status)
 		}
-		delete(headers, "Date") // hard to predict
+		delete(headers, "Date")                   // hard to predict
+		delete(headers, "X-Content-Type-Options") // a free gift from the Go http server
+		for _, v := range headers {
+			sort.Strings(v)
+		}
 		if !reflect.DeepEqual(tt.rheaders, headers) {
 			t.Errorf("Client.Do(%q, %q, %v, %v): headers expected %v, got %v", tt.method, tt.path, tt.headers, tt.body, tt.rheaders, headers)
 		}
