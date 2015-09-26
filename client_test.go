@@ -318,6 +318,120 @@ func TestClientPost(t *testing.T) {
 	}
 }
 
+var clientPutTests = []struct {
+	path    string
+	headers map[string][]string
+	body    func() io.Reader
+	client.Status
+	rheaders map[string][]string
+	rbody    io.Reader
+	err      error
+}{
+	{
+		path:   "/201",
+		body:   func() io.Reader { return strings.NewReader(postBody) },
+		Status: client.Status{201, "Created"},
+	},
+	{
+		path:   "/404",
+		Status: client.Status{404, "Not Found"},
+	},
+}
+
+func TestClientPut(t *testing.T) {
+	s := newServer(t, stdmux())
+	defer s.Shutdown()
+	for _, tt := range clientPutTests {
+		c := &Client{dialer: new(dialer)}
+		url := s.Root() + tt.path
+		var body io.Reader
+		if tt.body != nil {
+			body = tt.body()
+		}
+		status, _, _, err := c.Put(url, tt.headers, body)
+		if err != tt.err {
+			t.Errorf("Client.Put(%q, %v): err expected %v, got %v", tt.path, tt.headers, tt.err, err)
+		}
+		if status != tt.Status {
+			t.Errorf("Client.Put(%q, %v): status expected %v, got %v", tt.path, tt.headers, tt.Status, status)
+		}
+	}
+}
+
+var clientPatchTests = []struct {
+	path    string
+	headers map[string][]string
+	body    func() io.Reader
+	client.Status
+	rheaders map[string][]string
+	rbody    io.Reader
+	err      error
+}{
+	{
+		path:   "/201",
+		body:   func() io.Reader { return strings.NewReader(postBody) },
+		Status: client.Status{201, "Created"},
+	},
+	{
+		path:   "/404",
+		Status: client.Status{404, "Not Found"},
+	},
+}
+
+func TestClientPatch(t *testing.T) {
+	s := newServer(t, stdmux())
+	defer s.Shutdown()
+	for _, tt := range clientPatchTests {
+		c := &Client{dialer: new(dialer)}
+		url := s.Root() + tt.path
+		var body io.Reader
+		if tt.body != nil {
+			body = tt.body()
+		}
+		status, _, _, err := c.Patch(url, tt.headers, body)
+		if err != tt.err {
+			t.Errorf("Client.Patch(%q, %v): err expected %v, got %v", tt.path, tt.headers, tt.err, err)
+		}
+		if status != tt.Status {
+			t.Errorf("Client.Patch(%q, %v): status expected %v, got %v", tt.path, tt.headers, tt.Status, status)
+		}
+	}
+}
+
+var clientDeleteTests = []struct {
+	path    string
+	headers map[string][]string
+	client.Status
+	rheaders map[string][]string
+	rbody    io.Reader
+	err      error
+}{
+	{
+		path:   "/200",
+		Status: client.Status{200, "OK"},
+	},
+	{
+		path:   "/404",
+		Status: client.Status{404, "Not Found"},
+	},
+}
+
+func TestClientDelete(t *testing.T) {
+	s := newServer(t, stdmux())
+	defer s.Shutdown()
+	for _, tt := range clientDeleteTests {
+		c := &Client{dialer: new(dialer)}
+		url := s.Root() + tt.path
+		status, _, _, err := c.Delete(url, tt.headers)
+		if err != tt.err {
+			t.Errorf("Client.Delete(%q, %v): err expected %v, got %v", tt.path, tt.headers, tt.err, err)
+		}
+		if status != tt.Status {
+			t.Errorf("Client.Delete(%q, %v): status expected %v, got %v", tt.path, tt.headers, tt.Status, status)
+		}
+	}
+}
+
 // assert that StatusError is an error.
 var _ error = new(StatusError)
 

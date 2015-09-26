@@ -98,6 +98,21 @@ func (c *Client) Post(url string, headers map[string][]string, body io.Reader) (
 	return c.Do("POST", url, headers, body)
 }
 
+// Put sends a PUT request, suppling the contents of the reader as the request body.
+func (c *Client) Put(url string, headers map[string][]string, body io.Reader) (client.Status, map[string][]string, io.ReadCloser, error) {
+	return c.Do("PUT", url, headers, body)
+}
+
+// Patch sends a PATCH request, suppling the contents of the reader as the request body.
+func (c *Client) Patch(url string, headers map[string][]string, body io.Reader) (client.Status, map[string][]string, io.ReadCloser, error) {
+	return c.Do("PATCH", url, headers, body)
+}
+
+// Delete sends a DELETE request. If the response body is non nil it must be closed.
+func (c *Client) Delete(url string, headers map[string][]string) (client.Status, map[string][]string, io.ReadCloser, error) {
+	return c.Do("DELETE", url, headers, nil)
+}
+
 func toRequest(method string, path string, query []string, headers map[string][]string, body io.Reader) *client.Request {
 	return &client.Request{
 		Method:  method,
