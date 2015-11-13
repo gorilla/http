@@ -1,6 +1,7 @@
 package http
 
 import (
+	"crypto/tls"
 	"io"
 	"net"
 	"sync"
@@ -13,11 +14,18 @@ import (
 type Dialer interface {
 	// Dial dials a remote http server returning a Conn.
 	Dial(network, addr string) (Conn, error)
+	// Whether need through https
+	SetTLS(isHTTPS bool)
 }
 
 type dialer struct {
 	sync.Mutex                   // protects following fields
 	conns      map[string][]Conn // maps addr to a, possibly empty, slice of existing Conns
+	isTLS      bool              // support https
+}
+
+func (d *dialer) SetTLS(isHTTPS bool) {
+	d.SetTLS(isHTTPS)
 }
 
 func (d *dialer) Dial(network, addr string) (Conn, error) {
@@ -34,12 +42,22 @@ func (d *dialer) Dial(network, addr string) (Conn, error) {
 		}
 	}
 	d.Unlock()
-	c, err := net.Dial(network, addr)
-	return &conn{
-		Client: client.NewClient(c),
-		Conn:   c,
-		dialer: d,
-	}, err
+	if d.isTLS {
+		config := tls.Config{InsecureSkipVerify: true}
+		c, err := tls.Dial("tcp", addr, &config)
+		return &conn{
+			Client: client.NewClient(c),
+			Conn:   c,
+			dialer: d,
+		}, err
+	} else {
+		c, err := net.Dial(network, addr)
+		return &conn{
+			Client: client.NewClient(c),
+			Conn:   c,
+			dialer: d,
+		}, err
+	}
 }
 
 // Conn represnts a connection which can be used to communicate
