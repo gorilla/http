@@ -42,6 +42,9 @@ func (c *Client) Do(method, url string, headers map[string][]string, body io.Rea
 	if u.RawQuery != "" {
 		path += "?" + u.RawQuery
 	}
+	if u.Scheme == "https" {
+		c.dialer.SetTLS(true)
+	}
 	conn, err := c.dialer.Dial("tcp", host)
 	if err != nil {
 		return client.Status{}, nil, nil, err
