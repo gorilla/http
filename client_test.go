@@ -31,7 +31,7 @@ var clientDoTests = []struct {
 }{
 	{
 
-		Client:   Client{dialer: new(dialer)},
+		Client:   Client{Dialer: NewCachingDialer(dialer{})},
 		method:   "GET",
 		path:     "/200",
 		Status:   client.Status{200, "OK"},
@@ -40,7 +40,7 @@ var clientDoTests = []struct {
 	},
 	{
 
-		Client:   Client{dialer: new(dialer)},
+		Client:   Client{Dialer: NewCachingDialer(dialer{})},
 		method:   "GET",
 		path:     "/query1?a=1",
 		Status:   client.Status{200, "OK"},
@@ -49,7 +49,7 @@ var clientDoTests = []struct {
 	},
 	/** {
 
-	        Client:   Client{dialer: new(dialer)},
+	        Client:   Client{Dialer: NewCachingDialer(dialer{})},
 	        method:   "GET",
 	        path:     "/query1?a=1#ignored", // fragment should be ignored
 	        Status:   client.Status{200, "OK"},
@@ -58,7 +58,7 @@ var clientDoTests = []struct {
 	},     **/
 	{
 
-		Client:   Client{dialer: new(dialer)},
+		Client:   Client{Dialer: NewCachingDialer(dialer{})},
 		method:   "GET",
 		path:     "/query2?a=1&b=2",
 		Status:   client.Status{200, "OK"},
@@ -66,7 +66,7 @@ var clientDoTests = []struct {
 		rbody:    strings.NewReader("a=1&b=2"),
 	},
 	{
-		Client:   Client{dialer: new(dialer)},
+		Client:   Client{Dialer: NewCachingDialer(dialer{})},
 		method:   "GET",
 		path:     "/404",
 		Status:   client.Status{404, "Not Found"},
@@ -74,7 +74,7 @@ var clientDoTests = []struct {
 		rbody:    strings.NewReader("404 page not found\n"),
 	},
 	{
-		Client:   Client{dialer: new(dialer)},
+		Client:   Client{Dialer: NewCachingDialer(dialer{})},
 		method:   "GET",
 		path:     "/a",
 		Status:   client.Status{200, "OK"},
@@ -82,7 +82,7 @@ var clientDoTests = []struct {
 		rbody:    strings.NewReader(a()),
 	},
 	{
-		Client:  Client{dialer: new(dialer)},
+		Client:  Client{Dialer: NewCachingDialer(dialer{})},
 		method:  "GET",
 		path:    "/a",
 		Status:  client.Status{200, "OK"},
@@ -96,7 +96,7 @@ var clientDoTests = []struct {
 		rbody: strings.NewReader(a()),
 	},
 	{
-		Client:   Client{dialer: new(dialer)},
+		Client:   Client{Dialer: NewCachingDialer(dialer{})},
 		method:   "POST",
 		path:     "/201",
 		body:     func() io.Reader { return strings.NewReader(postBody) },
@@ -105,7 +105,7 @@ var clientDoTests = []struct {
 		rbody:    strings.NewReader("Created\n"),
 	},
 	{
-		Client: Client{dialer: new(dialer)},
+		Client: Client{Dialer: NewCachingDialer(dialer{})},
 		method: "GET",
 		path:   "/301",
 		Status: client.Status{301, "Moved Permanently"},
@@ -117,7 +117,7 @@ var clientDoTests = []struct {
 		rbody: strings.NewReader("<a href=\"/200\">Moved Permanently</a>.\n\n"),
 	},
 	{
-		Client: Client{dialer: new(dialer)},
+		Client: Client{Dialer: NewCachingDialer(dialer{})},
 		method: "GET",
 		path:   "/302",
 		Status: client.Status{302, "Found"},
@@ -129,7 +129,7 @@ var clientDoTests = []struct {
 		rbody: strings.NewReader("<a href=\"/200\">Found</a>.\n\n"),
 	},
 	{
-		Client:   Client{dialer: new(dialer), FollowRedirects: true},
+		Client:   Client{Dialer: NewCachingDialer(dialer{}), FollowRedirects: true},
 		method:   "GET",
 		path:     "/301",
 		Status:   client.Status{200, "OK"},
@@ -137,7 +137,7 @@ var clientDoTests = []struct {
 		rbody:    strings.NewReader("OK"),
 	},
 	{
-		Client:   Client{dialer: new(dialer), FollowRedirects: true},
+		Client:   Client{Dialer: NewCachingDialer(dialer{}), FollowRedirects: true},
 		method:   "GET",
 		path:     "/302",
 		Status:   client.Status{200, "OK"},
@@ -266,7 +266,7 @@ func TestClientGet(t *testing.T) {
 	s := newServer(t, stdmux())
 	defer s.Shutdown()
 	for _, tt := range clientGetTests {
-		c := &Client{dialer: new(dialer)}
+		c := &Client{Dialer: NewCachingDialer(dialer{})}
 		url := s.Root() + tt.path
 		status, _, _, err := c.Get(url, tt.headers)
 		if err != tt.err {
@@ -302,7 +302,7 @@ func TestClientPost(t *testing.T) {
 	s := newServer(t, stdmux())
 	defer s.Shutdown()
 	for _, tt := range clientPostTests {
-		c := &Client{dialer: new(dialer)}
+		c := &Client{Dialer: NewCachingDialer(dialer{})}
 		url := s.Root() + tt.path
 		var body io.Reader
 		if tt.body != nil {

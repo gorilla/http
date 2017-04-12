@@ -14,7 +14,7 @@ import (
 // Client implements a high level HTTP client. Client methods can be called concurrently
 // to as many end points as required.
 type Client struct {
-	dialer Dialer
+	Dialer Dialer
 
 	// FollowRedirects instructs the client to follow 301/302 redirects when idempotent.
 	FollowRedirects bool
@@ -32,9 +32,6 @@ func (c *Client) Do(method, url string, headers map[string][]string, body io.Rea
 	}
 	host := u.Host
 	headers["Host"] = []string{host}
-	if !strings.Contains(host, ":") {
-		host += ":80"
-	}
 	path := u.Path
 	if path == "" {
 		path = "/"
@@ -42,7 +39,7 @@ func (c *Client) Do(method, url string, headers map[string][]string, body io.Rea
 	if u.RawQuery != "" {
 		path += "?" + u.RawQuery
 	}
-	conn, err := c.dialer.Dial("tcp", host)
+	conn, err := c.Dialer.Dial(u.Scheme, host)
 	if err != nil {
 		return client.Status{}, nil, nil, err
 	}

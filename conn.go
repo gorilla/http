@@ -1,9 +1,12 @@
 package http
 
 import (
+	"crypto/tls"
+	"errors"
+	"fmt"
 	"io"
 	"net"
-	"sync"
+	"strings"
 	"time"
 
 	"github.com/gorilla/http/client"
@@ -11,35 +14,9 @@ import (
 
 // Dialer can dial a remote HTTP server.
 type Dialer interface {
-	// Dial dials a remote http server returning a Conn.
-	Dial(network, addr string) (Conn, error)
-}
-
-type dialer struct {
-	sync.Mutex                   // protects following fields
-	conns      map[string][]Conn // maps addr to a, possibly empty, slice of existing Conns
-}
-
-func (d *dialer) Dial(network, addr string) (Conn, error) {
-	d.Lock()
-	if d.conns == nil {
-		d.conns = make(map[string][]Conn)
-	}
-	if c, ok := d.conns[addr]; ok {
-		if len(c) > 0 {
-			conn := c[0]
-			c[0], c = c[len(c)-1], c[:len(c)-1]
-			d.Unlock()
-			return conn, nil
-		}
-	}
-	d.Unlock()
-	c, err := net.Dial(network, addr)
-	return &conn{
-		Client: client.NewClient(c),
-		Conn:   c,
-		dialer: d,
-	}, err
+	// Dial dials a remote http server returning a Conn having been requested
+	// using the given http scheme
+	Dial(scheme, host string) (Conn, error)
 }
 
 // Conn represnts a connection which can be used to communicate
@@ -59,12 +36,49 @@ type Conn interface {
 type conn struct {
 	client.Client
 	net.Conn
-	*dialer
 }
 
-func (c *conn) Release() {
-	c.dialer.Lock()
-	defer c.dialer.Unlock()
-	addr := c.Conn.RemoteAddr().String()
-	c.dialer.conns[addr] = append(c.dialer.conns[addr], c)
+func (c *conn) Release() {}
+
+type dialer struct {
+	config tls.Config
+}
+
+// DefaultDialer is a non-caching dialer for a Client. It is strict with HTTPS
+// certificates
+var DefaultDialer = dialer{}
+
+// InsecureDialer is a non-caching dialer for a Client. It does not verify
+// peer certificates nor does it validate hostnames.
+var InsecureDialer = dialer{config: tls.Config{InsecureSkipVerify: true}}
+
+func (d dialer) Dial(scheme, host string) (Conn, error) {
+	scheme = strings.ToLower(scheme)
+	switch scheme {
+	case "http":
+		if !strings.Contains(host, ":") {
+			host += ":80"
+		}
+		c, err := net.Dial("tcp", host)
+		if err != nil {
+			return nil, err
+		}
+		return &conn{
+			Client: client.NewClient(c),
+			Conn:   c}, nil
+	case "https":
+		if !strings.Contains(host, ":") {
+			host += ":443"
+		}
+		c, err := tls.Dial("tcp", host, &d.config)
+		if err != nil {
+			return nil, err
+		}
+
+		return &conn{
+			Client: client.NewClient(c),
+			Conn:   c}, nil
+	default:
+		return nil, errors.New(fmt.Sprintf("unsupported scheme: %s", scheme))
+	}
 }
