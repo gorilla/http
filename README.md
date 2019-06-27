@@ -1,6 +1,6 @@
-## NOTE: This library is no longer actively developed and is not recommended for use in new projects.
+## gorilla/http
 
-# gorilla/http
+> 👷 This library is in maintenance mode.
 
 A simple, safe and powerful HTTP client for the Go language.
 
