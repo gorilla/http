@@ -1,7 +1,5 @@
 ## gorilla/http
 
-> 👷 This library is in maintenance mode.
-
 A simple, safe and powerful HTTP client for the Go language.
 
 Build Status: [![Build Status](https://travis-ci.org/gorilla/http.png?branch=master)](https://travis-ci.org/gorilla/http)
