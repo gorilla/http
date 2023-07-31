@@ -28,7 +28,7 @@ func (d *dialer) Dial(network, addr string) (Conn, error) {
 	if c, ok := d.conns[addr]; ok {
 		if len(c) > 0 {
 			conn := c[0]
-			c[0], c = c[len(c)-1], c[:len(c)-1]
+			c[0], c = c[len(c)-1], c[:len(c)-1] // nolint:staticcheck
 			d.Unlock()
 			return conn, nil
 		}

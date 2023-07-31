@@ -4,7 +4,6 @@ import (
 	"bufio"
 	"bytes"
 	"io"
-	"io/ioutil"
 	"strings"
 	"testing"
 )
@@ -106,7 +105,9 @@ func TestStartBody(t *testing.T) {
 	if err := c.WriteHeader("Host", "localhost"); err != nil {
 		t.Fatal(err)
 	}
-	c.StartBody()
+	if err := c.StartBody(); err != nil {
+		t.Fatal(err)
+	}
 	err := c.WriteHeader("Connection", "close")
 	if _, ok := err.(*phaseError); !ok {
 		t.Fatalf("expected %T, got %v", new(phaseError), err)
@@ -124,7 +125,9 @@ func TestStartBody(t *testing.T) {
 func TestDoubleWriteBody(t *testing.T) {
 	var b bytes.Buffer
 	c := &writer{Writer: bufio.NewWriter(&b), tmp: &b}
-	c.StartBody()
+	if err := c.StartBody(); err != nil {
+		t.Fatal(err)
+	}
 	if err := c.WriteBody(strings.NewReader("")); err != nil {
 		t.Fatal(err)
 	}
@@ -138,7 +141,9 @@ func TestDoubleWriteBody(t *testing.T) {
 func TestDoubleWriteChunked(t *testing.T) {
 	var b bytes.Buffer
 	c := &writer{Writer: bufio.NewWriter(&b), tmp: &b}
-	c.StartBody()
+	if err := c.StartBody(); err != nil {
+		t.Fatal(err)
+	}
 	if err := c.WriteChunked(strings.NewReader("")); err != nil {
 		t.Fatal(err)
 	}
@@ -170,7 +175,9 @@ func (c *writer) write(t *testing.T, w writeTest) {
 			t.Fatal(err)
 		}
 	}
-	c.StartBody()
+	if err := c.StartBody(); err != nil {
+		t.Fatal(err)
+	}
 	if err := c.WriteBody(b(w.body)); err != nil {
 		t.Fatal(err)
 	}
@@ -339,7 +346,7 @@ func (w *countingWriter) Write(buf []byte) (int, error) {
 // verify that header buffering works
 func TestHeaderBuffering(t *testing.T) {
 	for _, tt := range headerBufferingTests {
-		cw := countingWriter{Writer: ioutil.Discard}
+		cw := countingWriter{Writer: io.Discard}
 		w := &writer{Writer: &cw}
 		if err := tt.f(w); err != nil {
 			t.Fatal(err)
