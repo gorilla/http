@@ -39,7 +39,7 @@ func newServer(t *testing.T, mux *http.ServeMux) *server {
 	}
 	// /404 is not handled, generating a 404
 	go func() {
-		if err := http.Serve(l, mux); err != nil {
+		if err := http.Serve(l, mux); err != nil { // nolint:staticcheck
 			// t.Error(err)
 		}
 	}()

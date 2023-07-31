@@ -158,7 +158,7 @@ NEXT:
 	}
 }
 
-var readBodyTests = []struct {
+var readBodyTests = []struct { // nolint:unused
 	body     string
 	length   int
 	expected string
@@ -170,7 +170,7 @@ var readBodyTests = []struct {
 }
 
 // disabled til I know what ReadBody should look like
-func testReadBody(t *testing.T) {
+func testReadBody(t *testing.T) { // nolint:unused
 	for _, tt := range readBodyTests {
 		c := &reader{b(tt.body)}
 		r := c.ReadBody()
