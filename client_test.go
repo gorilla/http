@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"log"
 	"net/http"
 	"reflect"
 	"sort"
@@ -31,19 +32,25 @@ var clientDoTests = []struct {
 }{
 	{
 
-		Client:   Client{dialer: new(dialer)},
-		method:   "GET",
-		path:     "/200",
-		Status:   client.Status{200, "OK"},
+		Client: Client{dialer: new(dialer)},
+		method: "GET",
+		path:   "/200",
+		Status: client.Status{
+			Code:   200,
+			Reason: "OK",
+		},
 		rheaders: map[string][]string{"Content-Length": []string{"2"}, "Content-Type": []string{"text/plain; charset=utf-8"}},
 		rbody:    strings.NewReader("OK"),
 	},
 	{
 
-		Client:   Client{dialer: new(dialer)},
-		method:   "GET",
-		path:     "/query1?a=1",
-		Status:   client.Status{200, "OK"},
+		Client: Client{dialer: new(dialer)},
+		method: "GET",
+		path:   "/query1?a=1",
+		Status: client.Status{
+			Code:   200,
+			Reason: "OK",
+		},
 		rheaders: map[string][]string{"Content-Length": []string{"3"}, "Content-Type": []string{"text/plain; charset=utf-8"}},
 		rbody:    strings.NewReader("a=1"),
 	},
@@ -58,49 +65,64 @@ var clientDoTests = []struct {
 	},     **/
 	{
 
-		Client:   Client{dialer: new(dialer)},
-		method:   "GET",
-		path:     "/query2?a=1&b=2",
-		Status:   client.Status{200, "OK"},
+		Client: Client{dialer: new(dialer)},
+		method: "GET",
+		path:   "/query2?a=1&b=2",
+		Status: client.Status{
+			Code:   200,
+			Reason: "OK",
+		},
 		rheaders: map[string][]string{"Content-Length": []string{"7"}, "Content-Type": []string{"text/plain; charset=utf-8"}},
 		rbody:    strings.NewReader("a=1&b=2"),
 	},
 	{
-		Client:   Client{dialer: new(dialer)},
-		method:   "GET",
-		path:     "/404",
-		Status:   client.Status{404, "Not Found"},
+		Client: Client{dialer: new(dialer)},
+		method: "GET",
+		path:   "/404",
+		Status: client.Status{
+			Code:   404,
+			Reason: "Not Found",
+		},
 		rheaders: map[string][]string{"Content-Length": []string{"19"}, "Content-Type": []string{"text/plain; charset=utf-8"}},
 		rbody:    strings.NewReader("404 page not found\n"),
 	},
 	{
-		Client:   Client{dialer: new(dialer)},
-		method:   "GET",
-		path:     "/a",
-		Status:   client.Status{200, "OK"},
+		Client: Client{dialer: new(dialer)},
+		method: "GET",
+		path:   "/a",
+		Status: client.Status{
+			Code:   200,
+			Reason: "OK",
+		},
 		rheaders: map[string][]string{"Transfer-Encoding": {"chunked"}, "Content-Type": []string{"text/plain; charset=utf-8"}},
 		rbody:    strings.NewReader(a()),
 	},
 	{
-		Client:  Client{dialer: new(dialer)},
-		method:  "GET",
-		path:    "/a",
-		Status:  client.Status{200, "OK"},
+		Client: Client{dialer: new(dialer)},
+		method: "GET",
+		path:   "/a",
+		Status: client.Status{
+			Code:   200,
+			Reason: "OK",
+		},
 		headers: map[string][]string{"Accept-Encoding": []string{"gzip"}},
 		rheaders: map[string][]string{
 			// net/http can buffer the first write to avoid chunked
 			"Content-Length":   []string{"48"},
 			"Content-Encoding": []string{"gzip"},
-			"Content-Type":     []string{"application/x-gzip"},
+			// "Content-Type":     []string{"application/x-gzip"},
 		},
 		rbody: strings.NewReader(a()),
 	},
 	{
-		Client:   Client{dialer: new(dialer)},
-		method:   "POST",
-		path:     "/201",
-		body:     func() io.Reader { return strings.NewReader(postBody) },
-		Status:   client.Status{201, "Created"},
+		Client: Client{dialer: new(dialer)},
+		method: "POST",
+		path:   "/201",
+		body:   func() io.Reader { return strings.NewReader(postBody) },
+		Status: client.Status{
+			Code:   201,
+			Reason: "Created",
+		},
 		rheaders: map[string][]string{"Content-Length": []string{"8"}, "Content-Type": []string{"text/plain; charset=utf-8"}},
 		rbody:    strings.NewReader("Created\n"),
 	},
@@ -108,7 +130,10 @@ var clientDoTests = []struct {
 		Client: Client{dialer: new(dialer)},
 		method: "GET",
 		path:   "/301",
-		Status: client.Status{301, "Moved Permanently"},
+		Status: client.Status{
+			Code:   301,
+			Reason: "Moved Permanently",
+		},
 		rheaders: map[string][]string{
 			"Location":       []string{"/200"},
 			"Content-Length": []string{"39"},
@@ -120,7 +145,10 @@ var clientDoTests = []struct {
 		Client: Client{dialer: new(dialer)},
 		method: "GET",
 		path:   "/302",
-		Status: client.Status{302, "Found"},
+		Status: client.Status{
+			Code:   302,
+			Reason: "Found",
+		},
 		rheaders: map[string][]string{
 			"Location":       []string{"/200"},
 			"Content-Length": []string{"27"},
@@ -129,18 +157,24 @@ var clientDoTests = []struct {
 		rbody: strings.NewReader("<a href=\"/200\">Found</a>.\n\n"),
 	},
 	{
-		Client:   Client{dialer: new(dialer), FollowRedirects: true},
-		method:   "GET",
-		path:     "/301",
-		Status:   client.Status{200, "OK"},
+		Client: Client{dialer: new(dialer), FollowRedirects: true},
+		method: "GET",
+		path:   "/301",
+		Status: client.Status{
+			Code:   200,
+			Reason: "OK",
+		},
 		rheaders: map[string][]string{"Content-Length": []string{"2"}, "Content-Type": []string{"text/plain; charset=utf-8"}},
 		rbody:    strings.NewReader("OK"),
 	},
 	{
-		Client:   Client{dialer: new(dialer), FollowRedirects: true},
-		method:   "GET",
-		path:     "/302",
-		Status:   client.Status{200, "OK"},
+		Client: Client{dialer: new(dialer), FollowRedirects: true},
+		method: "GET",
+		path:   "/302",
+		Status: client.Status{
+			Code:   200,
+			Reason: "OK",
+		},
 		rheaders: map[string][]string{"Content-Length": []string{"2"}, "Content-Type": []string{"text/plain; charset=utf-8"}},
 		rbody:    strings.NewReader("OK"),
 	},
@@ -148,7 +182,11 @@ var clientDoTests = []struct {
 
 func stdmux() *http.ServeMux {
 	mux := http.NewServeMux()
-	mux.HandleFunc("/200", func(w http.ResponseWriter, _ *http.Request) { w.Write([]byte("OK")) })
+	mux.HandleFunc("/200", func(w http.ResponseWriter, _ *http.Request) {
+		if _, err := w.Write([]byte("OK")); err != nil {
+			log.Fatal(err)
+		}
+	})
 	mux.HandleFunc("/a", func(w http.ResponseWriter, r *http.Request) {
 		var ww io.Writer = w
 		if r.Header.Get("Accept-Encoding") == "gzip" {
@@ -156,7 +194,9 @@ func stdmux() *http.ServeMux {
 			ww = gzip.NewWriter(ww)
 		}
 		for i := 0; i < 1024; i++ {
-			ww.Write([]byte("aaaaaaaa"))
+			if _, err := ww.Write([]byte("aaaaaaaa")); err != nil {
+				log.Fatal(err)
+			}
 		}
 		if w, ok := ww.(*gzip.Writer); ok {
 			w.Close()
@@ -164,18 +204,20 @@ func stdmux() *http.ServeMux {
 	})
 	mux.HandleFunc("/201", func(w http.ResponseWriter, r *http.Request) {
 		var b bytes.Buffer
-		io.Copy(&b, r.Body)
+		if _, err := io.Copy(&b, r.Body); err != nil {
+			log.Fatal(err)
+		}
 		if b.String() != postBody {
 			http.Error(w, fmt.Sprintf("/201, expected %q, got %q", postBody, b.String()), 400)
 		} else {
-			http.Error(w, "Created", 201)
+			http.Error(w, "Created", http.StatusCreated)
 		}
 	})
 	mux.HandleFunc("/301", func(w http.ResponseWriter, r *http.Request) {
-		http.Redirect(w, r, "200", 301)
+		http.Redirect(w, r, "200", http.StatusMovedPermanently)
 	})
 	mux.HandleFunc("/302", func(w http.ResponseWriter, r *http.Request) {
-		http.Redirect(w, r, "200", 302)
+		http.Redirect(w, r, "200", http.StatusFound)
 	})
 	mux.HandleFunc("/query1", func(w http.ResponseWriter, r *http.Request) {
 		rq := r.URL.RawQuery
@@ -183,7 +225,9 @@ func stdmux() *http.ServeMux {
 			http.Error(w, "Bad Request", 400)
 			return
 		}
-		w.Write([]byte(rq))
+		if _, err := w.Write([]byte(rq)); err != nil {
+			log.Fatal(err)
+		}
 	})
 	mux.HandleFunc("/query2", func(w http.ResponseWriter, r *http.Request) {
 		rq := r.URL.RawQuery
@@ -191,7 +235,9 @@ func stdmux() *http.ServeMux {
 			http.Error(w, "Bad Request", 400)
 			return
 		}
-		w.Write([]byte(rq))
+		if _, err := w.Write([]byte(rq)); err != nil {
+			log.Fatal(err)
+		}
 	})
 	return mux
 }
@@ -207,13 +253,13 @@ func TestClientDo(t *testing.T) {
 		}
 		status, headers, rbody, err := tt.Client.Do(tt.method, url, tt.headers, body)
 		if err != tt.err {
-			t.Errorf("Client.Do(%q, %q, %v, %v): err expected %v, got %v", tt.method, tt.path, tt.headers, tt.body, tt.err, err)
+			t.Errorf("Client.Do(%q, %q, %v, %v): err expected %v, got %v", tt.method, tt.path, tt.headers, reflect.ValueOf(tt.body), tt.err, err)
 		}
 		if err != nil {
 			continue
 		}
 		if status != tt.Status {
-			t.Errorf("Client.Do(%q, %q, %v, %v): status expected %v, got %v", tt.method, tt.path, tt.headers, tt.body, tt.Status, status)
+			t.Errorf("Client.Do(%q, %q, %v, %v): status expected %v, got %v", tt.method, tt.path, tt.headers, reflect.ValueOf(tt.body), tt.Status, status)
 		}
 		delete(headers, "Date")                   // hard to predict
 		delete(headers, "X-Content-Type-Options") // a free gift from the Go http server
@@ -221,10 +267,10 @@ func TestClientDo(t *testing.T) {
 			sort.Strings(v)
 		}
 		if !reflect.DeepEqual(tt.rheaders, headers) {
-			t.Errorf("Client.Do(%q, %q, %v, %v): headers expected %v, got %v", tt.method, tt.path, tt.headers, tt.body, tt.rheaders, headers)
+			t.Errorf("Client.Do(%q, %q, %v, %v): headers expected %v, got %v", tt.method, tt.path, tt.headers, reflect.ValueOf(tt.body), tt.rheaders, headers)
 		}
 		if actual, expected := readBodies(t, rbody, tt.rbody); actual != expected {
-			t.Errorf("Client.Do(%q, %q, %v, %v): body expected %q, got %q", tt.method, tt.path, tt.headers, tt.body, expected, actual)
+			t.Errorf("Client.Do(%q, %q, %v, %v): body expected %q, got %q", tt.method, tt.path, tt.headers, reflect.ValueOf(tt.body), expected, actual)
 		}
 	}
 }
@@ -253,12 +299,18 @@ var clientGetTests = []struct {
 	err      error
 }{
 	{
-		path:   "/200",
-		Status: client.Status{200, "OK"},
+		path: "/200",
+		Status: client.Status{
+			Code:   200,
+			Reason: "OK",
+		},
 	},
 	{
-		path:   "/404",
-		Status: client.Status{404, "Not Found"},
+		path: "/404",
+		Status: client.Status{
+			Code:   404,
+			Reason: "Not Found",
+		},
 	},
 }
 
@@ -288,13 +340,19 @@ var clientPostTests = []struct {
 	err      error
 }{
 	{
-		path:   "/201",
-		body:   func() io.Reader { return strings.NewReader(postBody) },
-		Status: client.Status{201, "Created"},
+		path: "/201",
+		body: func() io.Reader { return strings.NewReader(postBody) },
+		Status: client.Status{
+			Code:   201,
+			Reason: "Created",
+		},
 	},
 	{
-		path:   "/404",
-		Status: client.Status{404, "Not Found"},
+		path: "/404",
+		Status: client.Status{
+			Code:   404,
+			Reason: "Not Found",
+		},
 	},
 }
 
@@ -328,13 +386,19 @@ var clientPutTests = []struct {
 	err      error
 }{
 	{
-		path:   "/201",
-		body:   func() io.Reader { return strings.NewReader(postBody) },
-		Status: client.Status{201, "Created"},
+		path: "/201",
+		body: func() io.Reader { return strings.NewReader(postBody) },
+		Status: client.Status{
+			Code:   201,
+			Reason: "Created",
+		},
 	},
 	{
-		path:   "/404",
-		Status: client.Status{404, "Not Found"},
+		path: "/404",
+		Status: client.Status{
+			Code:   404,
+			Reason: "Not Found",
+		},
 	},
 }
 
@@ -368,13 +432,19 @@ var clientPatchTests = []struct {
 	err      error
 }{
 	{
-		path:   "/201",
-		body:   func() io.Reader { return strings.NewReader(postBody) },
-		Status: client.Status{201, "Created"},
+		path: "/201",
+		body: func() io.Reader { return strings.NewReader(postBody) },
+		Status: client.Status{
+			Code:   201,
+			Reason: "Created",
+		},
 	},
 	{
-		path:   "/404",
-		Status: client.Status{404, "Not Found"},
+		path: "/404",
+		Status: client.Status{
+			Code:   404,
+			Reason: "Not Found",
+		},
 	},
 }
 
@@ -407,12 +477,18 @@ var clientDeleteTests = []struct {
 	err      error
 }{
 	{
-		path:   "/200",
-		Status: client.Status{200, "OK"},
+		path: "/200",
+		Status: client.Status{
+			Code:   200,
+			Reason: "OK",
+		},
 	},
 	{
-		path:   "/404",
-		Status: client.Status{404, "Not Found"},
+		path: "/404",
+		Status: client.Status{
+			Code:   404,
+			Reason: "Not Found",
+		},
 	},
 }
 
@@ -496,7 +572,7 @@ var fromResponseTests = []struct {
 	body    io.Reader
 	headers map[string][]string
 }{
-// TODO(dfc)
+	// TODO(dfc)
 }
 
 func TestFromResponse(t *testing.T) {

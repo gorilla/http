@@ -4,7 +4,6 @@ import (
 	"compress/gzip"
 	"fmt"
 	"io"
-	"io/ioutil"
 	stdurl "net/url"
 	"strings"
 
@@ -61,7 +60,7 @@ func (c *Client) Do(method, url string, headers map[string][]string, body io.Rea
 	rc := &readCloser{rbody, conn}
 	if rstatus.IsRedirect() && c.FollowRedirects {
 		// consume the response body
-		_, err := io.Copy(ioutil.Discard, rc)
+		_, err := io.Copy(io.Discard, rc)
 		if err := firstErr(err, rc.Close()); err != nil {
 			return client.Status{}, nil, nil, err // TODO
 		}
@@ -134,7 +133,7 @@ func toHeaders(h map[string][]string) []client.Header {
 	var r []client.Header
 	for k, v := range h {
 		for _, v := range v {
-			r = append(r, client.Header{k, v})
+			r = append(r, client.Header{Key: k, Value: v})
 		}
 	}
 	return r

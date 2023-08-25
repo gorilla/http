@@ -15,11 +15,14 @@ var toHeadersTests = []struct {
 	{nil, nil},
 	{
 		map[string][]string{"Host": []string{"a"}},
-		[]client.Header{{"Host", "a"}},
+		[]client.Header{{Key: "Host", Value: "a"}},
 	},
 	{
 		map[string][]string{"Host": []string{"a", "B"}},
-		[]client.Header{{"Host", "B"}, {"Host", "a"}},
+		[]client.Header{
+			{Key: "Host", Value: "B"},
+			{Key: "Host", Value: "a"},
+		},
 	},
 	{
 		map[string][]string{
@@ -27,8 +30,8 @@ var toHeadersTests = []struct {
 			"Connection": []string{"close"},
 		},
 		[]client.Header{
-			{"Connection", "close"},
-			{"Host", "a"},
+			{Key: "Connection", Value: "close"},
+			{Key: "Host", Value: "a"},
 		},
 	},
 	{
@@ -37,8 +40,9 @@ var toHeadersTests = []struct {
 			"Connection": []string{"close"},
 		},
 		[]client.Header{
-			{"Connection", "close"},
-			{"Host", "B"}, {"Host", "a"},
+			{Key: "Connection", Value: "close"},
+			{Key: "Host", Value: "B"},
+			{Key: "Host", Value: "a"},
 		},
 	},
 }
@@ -59,17 +63,20 @@ var fromHeadersTests = []struct {
 }{
 	{nil, nil},
 	{
-		[]client.Header{{"Host", "a"}},
+		[]client.Header{{Key: "Host", Value: "a"}},
 		map[string][]string{"Host": []string{"a"}},
 	},
 	{
-		[]client.Header{{"Host", "B"}, {"Host", "a"}},
+		[]client.Header{
+			{Key: "Host", Value: "B"},
+			{Key: "Host", Value: "a"},
+		},
 		map[string][]string{"Host": []string{"B", "a"}},
 	},
 	{
 		[]client.Header{
-			{"Connection", "close"},
-			{"Host", "a"},
+			{Key: "Connection", Value: "close"},
+			{Key: "Host", Value: "a"},
 		},
 		map[string][]string{
 			"Host":       []string{"a"},
@@ -78,8 +85,9 @@ var fromHeadersTests = []struct {
 	},
 	{
 		[]client.Header{
-			{"Connection", "close"},
-			{"Host", "B"}, {"Host", "a"},
+			{Key: "Connection", Value: "close"},
+			{Key: "Host", Value: "B"},
+			{Key: "Host", Value: "a"},
 		},
 		map[string][]string{
 			"Host":       []string{"B", "a"},
